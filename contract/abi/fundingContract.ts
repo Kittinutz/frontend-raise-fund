@@ -679,7 +679,7 @@ const crowdFundingABI = [
         type: "uint256",
       },
     ],
-    name: "ownerWithdrawToInvest",
+    name: "ownerWithdrawRound",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

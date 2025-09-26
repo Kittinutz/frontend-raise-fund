@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createWalletClient, custom, publicActions, WalletClient } from "viem";
 import { localhost } from "viem/chains";
 
@@ -10,22 +10,38 @@ declare global {
 }
 
 const useWallet = () => {
-  const [walletClient, setWalletClient] = useState<WalletClient | null>(null);
-  useEffect(() => {
-    if (window.ethereum) {
-      // You can add any initialization logic here if needed
-      console.log("Ethereum provider found");
-      const wallet = createWalletClient({
-        chain: localhost,
-        transport: custom(window.ethereum!),
-      }).extend(publicActions);
-      setWalletClient(wallet);
-    }
-    // You can add any side effects or event listeners related to the wallet here
+  const [currentAddress, setCurrentAddress] = useState<string | undefined>();
+  const disconnectWallet = async () => {
+    await window.ethereum.request({
+      method: "wallet_revokePermissions",
+      params: [
+        {
+          eth_accounts: {},
+        },
+      ],
+    });
+  };
+
+  const walletClient = useMemo(() => {
+    if (typeof window === "undefined" || !window.ethereum) return null;
+    return createWalletClient({
+      chain: localhost,
+      transport: custom(window.ethereum!),
+    }).extend(publicActions);
   }, []);
 
+  useEffect(() => {
+    const fetchAddress = async () => {
+      const address = await walletClient?.getAddresses();
+      setCurrentAddress(address ? address[0] : undefined);
+    };
+    fetchAddress();
+  }, [walletClient]);
   return {
     walletClient,
+    disconnectWallet,
+    currentAddress,
+    setCurrentAddress,
   };
 };
 

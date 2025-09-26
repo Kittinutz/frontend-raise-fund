@@ -14,7 +14,13 @@ interface RoundInfo {
   rewardDeposit: bigint;
 }
 
-const useFundingContract = (walletClient: WalletClient & PublicActions) => {
+const useFundingContract = ({
+  walletClient,
+  currentAddress,
+}: {
+  walletClient: WalletClient & PublicActions;
+  currentAddress: string;
+}) => {
   const [numberOfRound, setNumberOfRound] = useState<bigint[]>([]);
   const [roundLists, setRoundList] = useState<RoundInfo[]>([]);
   const contract = useMemo(
@@ -71,6 +77,29 @@ const useFundingContract = (walletClient: WalletClient & PublicActions) => {
 
     return roundInfo;
   };
+
+  const ownerWithdrawRound = async (roundId: bigint) => {
+    const address = await walletClient.getAddresses();
+    if (address.length === 0) return;
+    const { request } = await walletClient.simulateContract({
+      abi: contract.abi,
+      address: contract.address as `0x${string}`,
+      functionName: "ownerWithdrawRound",
+      account: address[0],
+      chain: foundry,
+      args: [roundId],
+    });
+    const hash = await walletClient.writeContract(request);
+    const receipt = await walletClient.waitForTransactionReceipt({
+      hash,
+    });
+    console.log("receipt", receipt);
+    if (receipt.status !== "success") {
+      throw new Error("Transaction failed");
+    }
+    return hash;
+  };
+
   const createRound = async ({
     pricePerToken,
     rewardPercentage,
@@ -122,6 +151,7 @@ const useFundingContract = (walletClient: WalletClient & PublicActions) => {
   useEffect(() => {
     async function fetchRoundListDetail() {
       const detailPromise = [];
+      if (!numberOfRound?.length) return;
       for (let i = 0; i < numberOfRound.length; i++) {
         const promisePayload = contract.read.getRoundInfo([
           numberOfRound[i],
@@ -201,6 +231,7 @@ const useFundingContract = (walletClient: WalletClient & PublicActions) => {
     numberOfRound,
     roundLists,
     investRound,
+    ownerWithdrawRound,
   };
   // Your hook logic here
 };

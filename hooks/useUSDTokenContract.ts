@@ -1,14 +1,21 @@
 import getClientConnectUsdContract from "@/contract/usdtContract";
-import { useEffect, useState } from "react";
+import { use, useCallback, useEffect, useState } from "react";
 import { GetContractReturnType, PublicActions, WalletClient } from "viem";
 import { foundry } from "viem/chains";
 // Import Contract type if available
 
-const useUSDTokenContract = (walletClient: WalletClient & PublicActions) => {
+const useUSDTokenContract = ({
+  walletClient,
+  currentAddress,
+}: {
+  walletClient: WalletClient & PublicActions;
+  currentAddress: string;
+}) => {
   const [usdTokenContract, setTokenContract] =
     useState<GetContractReturnType>();
   const [usdtBalance, setUsdtBalance] = useState<bigint | null>(null);
   const [usdtOwner, setUsdtOwner] = useState<string | null>(null);
+
   useEffect(() => {
     console.log("walletClient", walletClient);
     if (!walletClient) return;
@@ -27,6 +34,17 @@ const useUSDTokenContract = (walletClient: WalletClient & PublicActions) => {
     return balance;
   };
 
+  const updateMyTokenBalance = useCallback(async () => {
+    const address = await walletClient.getAddresses();
+    if (address.length === 0) return 0;
+    const balance = await usdTokenContract?.read.balanceOf([address[0]]);
+    setUsdtBalance(balance ?? null);
+    return balance;
+  }, [usdTokenContract, walletClient]);
+
+  const clearBalance = () => {
+    setUsdtBalance(null);
+  };
   const mintUSDT = async (amount: bigint) => {
     if (!usdTokenContract) return;
     const address = await walletClient.getAddresses();
@@ -96,16 +114,17 @@ const useUSDTokenContract = (walletClient: WalletClient & PublicActions) => {
   };
 
   useEffect(() => {
-    const fetchBalance = async () => {
+    const fetchCurrentWalletUSDTBalance = async () => {
       if (!usdTokenContract) return;
       const address = await walletClient.getAddresses();
       if (address.length === 0) return;
       const balance = await usdTokenContract.read.balanceOf([address[0]]);
       setUsdtOwner("owner");
       setUsdtBalance(balance);
+      console.log("Fetched USDT balance:", balance);
     };
-    fetchBalance();
-  }, [usdTokenContract, walletClient]);
+    fetchCurrentWalletUSDTBalance();
+  }, [usdTokenContract, walletClient, currentAddress]);
 
   return {
     usdtBalance,
@@ -116,6 +135,8 @@ const useUSDTokenContract = (walletClient: WalletClient & PublicActions) => {
     usdtOwner,
     handleApprove,
     usdtAllowance,
+    updateMyTokenBalance,
+    clearBalance,
   };
   // Your hook logic here
 };

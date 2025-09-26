@@ -29,7 +29,7 @@ const useFundingTokenContract = (
   };
 
   useEffect(() => {
-    const fetchBalance = async () => {
+    const fetchCurrentWalletTokenBalance = async () => {
       if (!tokenContract) return;
       const address = await walletClient.getAddresses();
       if (address.length === 0) return;
@@ -37,7 +37,7 @@ const useFundingTokenContract = (
       setUsdtOwner("owner");
       setBalance(balance);
     };
-    fetchBalance();
+    fetchCurrentWalletTokenBalance();
   }, [tokenContract, walletClient]);
 
   return {
