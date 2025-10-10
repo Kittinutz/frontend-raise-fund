@@ -35,7 +35,7 @@ const useFundingContract = ({
       console.log({
         roundList,
       });
-      return roundList;
+      return roundList as bigint[];
     },
     [contract]
   );

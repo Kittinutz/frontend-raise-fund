@@ -8,9 +8,10 @@ import { foundry } from "viem/chains";
 
 export default function Home() {
   const [currentFundContractAllowance, setCurrentFundContractAllowance] =
-    useState(0);
+    useState(BigInt(0));
 
   const { walletClient, currentAddress, setCurrentAddress } = useWallet();
+
   const {
     usdtBalance,
     mintUSDT,
@@ -98,6 +99,7 @@ export default function Home() {
     await updateMyTokenBalance();
     // Now you can call the investment function on the funding contract
   };
+
   useEffect(() => {
     const fetchAllowance = async () => {
       if (!currentAddress) return;
@@ -106,9 +108,7 @@ export default function Home() {
         process.env.NEXT_PUBLIC_FUNDRAISING_CONTRACT_ADDRESS as `0x${string}`
       )) as bigint;
       if (!allowance) return;
-      setCurrentFundContractAllowance(
-        formatEther(allowance) as unknown as number
-      );
+      setCurrentFundContractAllowance(allowance);
     };
     fetchAllowance();
   }, [currentAddress, usdtAllowance]);

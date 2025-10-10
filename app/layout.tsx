@@ -4,7 +4,8 @@ import "./globals.css";
 
 const anuphan = Anuphan({
   variable: "--font-anuphan-sans",
-  subsets: ["latin"],
+
+  subsets: ["latin", "thai"],
 });
 
 export const metadata: Metadata = {
