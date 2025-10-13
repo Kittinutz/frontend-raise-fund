@@ -1,5 +1,5 @@
 "use client";
-import useFundingContract from "@/hooks/useFundingContract";
+// import useFundingContract from "@/hooks/useFundingContract";
 import useWallet from "@/hooks/useWallet";
 import { useEffect, useState } from "react";
 import { formatEther } from "viem";
@@ -20,16 +20,82 @@ export default function FundingRounds() {
   const { walletClient, currentAddress } = useWallet();
   const [isLoading, setIsLoading] = useState(true);
 
-  const { roundLists } = useFundingContract({
-    walletClient: walletClient!,
-    currentAddress: currentAddress!,
-  });
+  // Mock data for testing - replace with contract data when ready
+  const mockRoundsData: RoundInfo[] = [
+    {
+      roundId: BigInt(1),
+      pricePerToken: BigInt("1000000000000000000"), // 1 USDT in wei
+      rewardPercentage: BigInt(8),
+      investEndDate: BigInt(Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60), // 30 days from now
+      roundEndDate: BigInt(Math.floor(Date.now() / 1000) + 90 * 24 * 60 * 60), // 90 days from now
+      totalTokens: BigInt("1000000000000000000000"), // 1000 tokens in wei
+      tokensSold: BigInt("750000000000000000000"), // 750 tokens sold in wei
+      isActive: true,
+      rewardDeposit: BigInt("80000000000000000000"), // 80 tokens reward
+    },
+    {
+      roundId: BigInt(2),
+      pricePerToken: BigInt("1200000000000000000"), // 1.2 USDT in wei
+      rewardPercentage: BigInt(10),
+      investEndDate: BigInt(Math.floor(Date.now() / 1000) + 45 * 24 * 60 * 60), // 45 days from now
+      roundEndDate: BigInt(Math.floor(Date.now() / 1000) + 120 * 24 * 60 * 60), // 120 days from now
+      totalTokens: BigInt("500000000000000000000"), // 500 tokens in wei
+      tokensSold: BigInt("125000000000000000000"), // 125 tokens sold in wei
+      isActive: true,
+      rewardDeposit: BigInt("50000000000000000000"), // 50 tokens reward
+    },
+    {
+      roundId: BigInt(3),
+      pricePerToken: BigInt("800000000000000000"), // 0.8 USDT in wei
+      rewardPercentage: BigInt(6),
+      investEndDate: BigInt(Math.floor(Date.now() / 1000) - 10 * 24 * 60 * 60), // 10 days ago (ended)
+      roundEndDate: BigInt(Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60), // 30 days from now
+      totalTokens: BigInt("2000000000000000000000"), // 2000 tokens in wei
+      tokensSold: BigInt("2000000000000000000000"), // Fully sold
+      isActive: false,
+      rewardDeposit: BigInt("120000000000000000000"), // 120 tokens reward
+    },
+    {
+      roundId: BigInt(4),
+      pricePerToken: BigInt("1500000000000000000"), // 1.5 USDT in wei
+      rewardPercentage: BigInt(12),
+      investEndDate: BigInt(Math.floor(Date.now() / 1000) + 60 * 24 * 60 * 60), // 60 days from now
+      roundEndDate: BigInt(Math.floor(Date.now() / 1000) + 180 * 24 * 60 * 60), // 180 days from now
+      totalTokens: BigInt("800000000000000000000"), // 800 tokens in wei
+      tokensSold: BigInt("0"), // No tokens sold yet
+      isActive: true,
+      rewardDeposit: BigInt("96000000000000000000"), // 96 tokens reward
+    },
+    {
+      roundId: BigInt(5),
+      pricePerToken: BigInt("900000000000000000"), // 0.9 USDT in wei
+      rewardPercentage: BigInt(7),
+      investEndDate: BigInt(Math.floor(Date.now() / 1000) + 15 * 24 * 60 * 60), // 15 days from now
+      roundEndDate: BigInt(Math.floor(Date.now() / 1000) + 75 * 24 * 60 * 60), // 75 days from now
+      totalTokens: BigInt("1500000000000000000000"), // 1500 tokens in wei
+      tokensSold: BigInt("450000000000000000000"), // 450 tokens sold in wei
+      isActive: true,
+      rewardDeposit: BigInt("105000000000000000000"), // 105 tokens reward
+    },
+  ];
+
+  // Use mock data instead of contract data
+  const roundLists = mockRoundsData;
+
+  // Comment out the contract hook for now
+  // const { roundLists } = useFundingContract({
+  //   walletClient: walletClient!,
+  //   currentAddress: currentAddress!,
+  // });
 
   useEffect(() => {
-    if (walletClient && currentAddress) {
+    // Simulate loading time
+    const timer = setTimeout(() => {
       setIsLoading(false);
-    }
-  }, [walletClient, currentAddress]);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const formatDate = (timestamp: bigint) => {
     return new Date(Number(timestamp) * 1000).toLocaleDateString();
@@ -97,31 +163,45 @@ export default function FundingRounds() {
     );
   }
 
-  if (!walletClient || !currentAddress) {
-    return (
-      <div className="container max-w-6xl mx-auto px-4 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">
-            Connect Wallet to View Rounds
-          </h2>
-          <p className="text-gray-600">
-            Please connect your wallet to view available funding rounds.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // Optional: Show wallet connection prompt but still display mock data
+  const showWalletPrompt = !walletClient || !currentAddress;
 
   return (
     <div className="container max-w-6xl mx-auto px-4 py-8">
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-2">
-          Funding Rounds
+          Funding Rounds {showWalletPrompt ? "(Mock Data)" : ""}
         </h2>
         <p className="text-gray-600">
           Explore our current and past funding rounds backed by Thailand&apos;s
           largest halal abattoir operations.
         </p>
+        {showWalletPrompt && (
+          <div className="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-yellow-400"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  <strong>Demo Mode:</strong> Connect your wallet to access real
+                  funding rounds. Currently showing sample data for
+                  demonstration.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {roundLists.length === 0 ? (
@@ -193,8 +273,12 @@ export default function FundingRounds() {
                         ></div>
                       </div>
                       <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>{round.tokensSold} tokens sold</span>
-                        <span>{round.totalTokens} total token on sale</span>
+                        <span>
+                          {formatTokenAmount(round.tokensSold)} tokens sold
+                        </span>
+                        <span>
+                          {formatTokenAmount(round.totalTokens)} total tokens
+                        </span>
                       </div>
                     </div>
 
@@ -244,8 +328,19 @@ export default function FundingRounds() {
 
                   {status === "Active" && (
                     <div className="mt-6">
-                      <button className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200">
-                        Invest in Round
+                      <button
+                        className="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                        onClick={() =>
+                          alert(
+                            `Mock: Invest in Round ${
+                              round.roundId
+                            }\nPrice: $${formatTokenAmount(
+                              round.pricePerToken
+                            )} USDT\nAPY: ${round.rewardPercentage}%`
+                          )
+                        }
+                      >
+                        Invest in Round (Demo)
                       </button>
                     </div>
                   )}
