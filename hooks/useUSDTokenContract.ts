@@ -6,16 +6,16 @@ import { foundry } from "viem/chains";
 
 /**
  * Custom hook for interacting with USDT token contract
- * 
+ *
  * Features:
  * - Automatic balance updates after each transaction
  * - Loading and error state management
  * - Comprehensive error handling
  * - Periodic balance refresh option
- * 
+ *
  * @param walletClient - Viem wallet client
  * @param currentAddress - Current connected wallet address
- * 
+ *
  * @returns Object containing:
  * - State: usdtBalance, isLoading, error
  * - Actions: mintUSDT, handleApprove (auto-refresh balance)
@@ -42,21 +42,24 @@ const useUSDTokenContract = ({
     setTokenContract(contract);
   }, [walletClient]);
 
-  const getBalanceOf = useCallback(async (address: `0x${string}`) => {
-    if (!usdTokenContract) return null;
-    try {
-      const balance = await walletClient.readContract({
-        abi: usdTokenContract.abi,
-        address: usdTokenContract.address,
-        functionName: "balanceOf",
-        args: [address],
-      });
-      return balance as bigint;
-    } catch (error) {
-      console.error("Error fetching balance:", error);
-      return null;
-    }
-  }, [usdTokenContract, walletClient]);
+  const getBalanceOf = useCallback(
+    async (address: `0x${string}`) => {
+      if (!usdTokenContract) return null;
+      try {
+        const balance = await walletClient.readContract({
+          abi: usdTokenContract.abi,
+          address: usdTokenContract.address,
+          functionName: "balanceOf",
+          args: [address],
+        });
+        return balance as bigint;
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+        return null;
+      }
+    },
+    [usdTokenContract, walletClient]
+  );
 
   const getMyTokenBalance = async () => {
     try {
@@ -90,14 +93,17 @@ const useUSDTokenContract = ({
   }, [updateMyTokenBalance]);
 
   // Periodic balance refresh (optional)
-  const startPeriodicRefresh = useCallback((intervalMs: number = 30000) => {
-    const interval = setInterval(async () => {
-      if (usdTokenContract && walletClient) {
-        await updateMyTokenBalance();
-      }
-    }, intervalMs);
-    return () => clearInterval(interval);
-  }, [usdTokenContract, walletClient, updateMyTokenBalance]);
+  const startPeriodicRefresh = useCallback(
+    (intervalMs: number = 30000) => {
+      const interval = setInterval(async () => {
+        if (usdTokenContract && walletClient) {
+          await updateMyTokenBalance();
+        }
+      }, intervalMs);
+      return () => clearInterval(interval);
+    },
+    [usdTokenContract, walletClient, updateMyTokenBalance]
+  );
 
   const clearBalance = () => {
     setUsdtBalance(null);
@@ -106,7 +112,7 @@ const useUSDTokenContract = ({
     if (!usdTokenContract) return;
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const address = await walletClient.getAddresses();
       console.log("---->", address);
@@ -129,10 +135,11 @@ const useUSDTokenContract = ({
 
       // Auto-refresh balance after successful mint
       await refreshBalanceAfterAction();
-      
+
       return hash;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Error minting USDT";
+      const errorMessage =
+        error instanceof Error ? error.message : "Error minting USDT";
       console.error("Error minting USDT:", error);
       setError(errorMessage);
       throw error;
@@ -148,7 +155,7 @@ const useUSDTokenContract = ({
     if (!usdTokenContract) return;
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const address = await walletClient.getAddresses();
 
@@ -176,10 +183,11 @@ const useUSDTokenContract = ({
 
       // Auto-refresh balance after successful approval
       await refreshBalanceAfterAction();
-      
+
       return hash;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Error approving USDT";
+      const errorMessage =
+        error instanceof Error ? error.message : "Error approving USDT";
       console.error("Error approving USDT:", error);
       setError(errorMessage);
       throw error;
@@ -230,19 +238,19 @@ const useUSDTokenContract = ({
     usdtOwner,
     isLoading,
     error,
-    
+
     // Contract instance
     usdTokenContract,
-    
+
     // Actions that modify state and auto-refresh balance
     mintUSDT,
     handleApprove,
-    
+
     // Read-only functions
     getBalanceOf,
     getMyTokenBalance,
     usdtAllowance,
-    
+
     // Manual refresh functions
     updateMyTokenBalance,
     refreshBalanceAfterAction,

@@ -1,13 +1,19 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Separator } from "./ui/separator";
-import { nfts, investmentRounds } from "../lib/mockData";
+"use client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { nfts, investmentRounds } from "@/lib/mockData";
 import {
   ExternalLink,
   Shield,
   Lock,
-  Unlock,
   Calendar,
   Coins,
   User,
@@ -16,15 +22,12 @@ import {
   CheckCircle2,
   XCircle,
 } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import ImageWithFallback from "@/components/figma/ImageWithFallback";
+import { useParams } from "next/navigation";
 
-interface NFTDetailPageProps {
-  nftId: string;
-  onNavigate: (page: string, id?: string) => void;
-}
-
-export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
-  const nft = nfts.find((n) => n.tokenId === nftId);
+export default function NFTDetailPage() {
+  const { tokenId } = useParams();
+  const nft = nfts.find((n) => n.tokenId === tokenId);
   const round = nft ? investmentRounds.find((r) => r.id === nft.roundId) : null;
 
   if (!nft) {
@@ -36,11 +39,10 @@ export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              The NFT you're looking for doesn't exist or hasn't been minted yet.
+              The NFT you&apos;re looking for doesn&apos;t exist or hasn&apos;t
+              been minted yet.
             </p>
-            <Button onClick={() => onNavigate('transactions')}>
-              Back to Transactions
-            </Button>
+            <Button>Back to Transactions</Button>
           </CardContent>
         </Card>
       </div>
@@ -67,7 +69,7 @@ export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
         {/* Back Button */}
         <Button
           variant="ghost"
-          onClick={() => onNavigate('transactions')}
+          onClick={() => onNavigate("transactions")}
           className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -92,7 +94,9 @@ export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
                       <h3>CowToken NFT</h3>
                       {getStatusBadge()}
                     </div>
-                    <p className="text-2xl text-primary font-mono">{nft.tokenId}</p>
+                    <p className="text-2xl text-primary font-mono">
+                      {nft.tokenId}
+                    </p>
                   </div>
 
                   <Separator />
@@ -138,7 +142,7 @@ export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
                     onClick={() => {
                       window.open(
                         `https://etherscan.io/token/${nft.tokenId}`,
-                        '_blank'
+                        "_blank"
                       );
                     }}
                   >
@@ -176,20 +180,28 @@ export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Round</p>
-                    <p className="text-lg">{round?.name || 'N/A'}</p>
+                    <p className="text-lg">{round?.name || "N/A"}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Price per Token</p>
+                    <p className="text-sm text-gray-600 mb-1">
+                      Price per Token
+                    </p>
                     <p className="text-lg text-primary">
-                      ${nft.priceUSDTperToken.toLocaleString()} USDT
+                      ${nft.tokePrice.toLocaleString()} USDT
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Reward Percentage</p>
-                    <p className="text-lg text-primary">{nft.rewardPercentage}%</p>
+                    <p className="text-sm text-gray-600 mb-1">
+                      Reward Percentage
+                    </p>
+                    <p className="text-lg text-primary">
+                      {nft.rewardPercentage}%
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">Total Tokens in Round</p>
+                    <p className="text-sm text-gray-600 mb-1">
+                      Total Tokens in Round
+                    </p>
                     <p className="text-lg">{nft.totalTokenOpenInvestment}</p>
                   </div>
                 </div>
@@ -223,7 +235,9 @@ export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
                       <Calendar className="h-5 w-5 text-accent" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-gray-600">Fundraising Close Date</p>
+                      <p className="text-sm text-gray-600">
+                        Fundraising Close Date
+                      </p>
                       <p className="text-lg">
                         {new Date(nft.closeDateInvestment).toLocaleDateString()}
                       </p>
@@ -235,7 +249,9 @@ export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
                       <Calendar className="h-5 w-5 text-green-700" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm text-gray-600">Investment End Date</p>
+                      <p className="text-sm text-gray-600">
+                        Investment End Date
+                      </p>
                       <p className="text-lg">
                         {new Date(nft.endDateInvestment).toLocaleDateString()}
                       </p>
@@ -255,7 +271,9 @@ export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
               </CardHeader>
               <CardContent>
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">Original Buyer Wallet</p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Original Buyer Wallet
+                  </p>
                   <div className="flex items-center gap-3">
                     <code className="flex-1 bg-gray-100 px-4 py-3 rounded text-sm font-mono">
                       {nft.originalBuyer}
@@ -271,7 +289,7 @@ export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
                     </Button>
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
-                    View address on{' '}
+                    View address on{" "}
                     <a
                       href={`https://etherscan.io/address/${nft.originalBuyer}`}
                       target="_blank"
@@ -295,13 +313,15 @@ export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
               </CardHeader>
               <CardContent>
                 <div>
-                  <p className="text-sm text-gray-600 mb-2">IPFS Metadata Hash</p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    IPFS Metadata Hash
+                  </p>
                   <code className="block bg-gray-100 px-4 py-3 rounded text-sm font-mono break-all">
                     {nft.metadata}
                   </code>
                   <p className="text-xs text-gray-500 mt-2">
-                    This hash links to immutable metadata stored on IPFS, ensuring
-                    transparency and authenticity.
+                    This hash links to immutable metadata stored on IPFS,
+                    ensuring transparency and authenticity.
                   </p>
                 </div>
               </CardContent>
@@ -317,9 +337,9 @@ export function NFTDetailPage({ nftId, onNavigate }: NFTDetailPageProps) {
                   <div>
                     <h3 className="mb-1">Blockchain Verified</h3>
                     <p className="text-sm text-gray-600">
-                      This NFT is secured on the blockchain and represents verified
-                      ownership of 1 CowToken. All transaction data is immutable and
-                      publicly auditable.
+                      This NFT is secured on the blockchain and represents
+                      verified ownership of 1 CowToken. All transaction data is
+                      immutable and publicly auditable.
                     </p>
                   </div>
                 </div>

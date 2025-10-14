@@ -303,18 +303,7 @@ export const transactions: Transaction[] = [
     purchaseDate: "2025-10-20",
     purchaseTime: "14:30:00",
     status: "Completed",
-    nftIds: [
-      "NFT-001",
-      "NFT-002",
-      "NFT-003",
-      "NFT-004",
-      "NFT-005",
-      "NFT-006",
-      "NFT-007",
-      "NFT-008",
-      "NFT-009",
-      "NFT-010",
-    ],
+    nftIds: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "NFT-010"],
     usdtAmount: 20000,
   },
   {
@@ -360,7 +349,7 @@ export const transactions: Transaction[] = [
 
 export const nfts: NFT[] = [
   {
-    tokenId: "NFT-001",
+    tokenId: "1",
     roundId: "1",
     tokePrice: 2000,
     rewardPercentage: 3,
@@ -376,7 +365,7 @@ export const nfts: NFT[] = [
     imageUrl: "https://images.unsplash.com/photo-1560493676-04071c5f467b?w=400",
   },
   {
-    tokenId: "NFT-002",
+    tokenId: "2",
     roundId: "1",
     tokePrice: 2000,
     rewardPercentage: 3,
