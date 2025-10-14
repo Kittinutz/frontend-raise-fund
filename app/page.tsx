@@ -60,7 +60,7 @@ export default function LandingPage() {
                   <Button
                     size="lg"
                     variant="outline"
-                    className="border-white text-white hover:bg-white hover:text-foreground"
+                    className="border-white text-gray-500 hover:bg-white hover:text-foreground"
                   >
                     View All Rounds
                   </Button>

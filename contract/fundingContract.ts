@@ -6,6 +6,7 @@ import {
   WalletClient,
 } from "viem";
 import fundingContractABI from "./abi/fundingContract";
+import { publicClient } from "@/utils/client";
 
 type FundingContract = GetContractReturnType<
   typeof fundingContractABI,
@@ -18,7 +19,10 @@ const getClientConnectCrownFundingContract = (
   const address = process.env.NEXT_PUBLIC_FUNDRAISING_CONTRACT_ADDRESS;
   return getContract({
     abi: fundingContractABI,
-    client,
+    client: {
+      public: publicClient,
+      wallet: client,
+    },
     address: address as `0x${string}`,
   });
 };

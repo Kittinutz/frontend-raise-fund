@@ -3,6 +3,7 @@ import { Anuphan } from "next/font/google";
 import "./globals.css";
 import Footer from "@/components/ui/footer";
 import { Header } from "@/components/Header";
+import { WalletProvider } from "@/contexts/WalletProvider";
 
 const anuphan = Anuphan({
   variable: "--font-anuphan-sans",
@@ -23,9 +24,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${anuphan.className}  antialiased`}>
-        <Header />
-        {children}
-        <Footer />
+        <WalletProvider>
+          <Header />
+          {children}
+          <Footer />
+        </WalletProvider>
       </body>
     </html>
   );

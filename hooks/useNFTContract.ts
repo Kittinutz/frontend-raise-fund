@@ -1,17 +1,15 @@
-import getClientConnectCrownFundingContract from "@/contract/fundingContract";
-import getClientConnectTokenContract from "@/contract/tokenContract";
+import { useWallet } from "@/contexts/WalletProvider";
+import getClientConnectTokenContract from "@/contract/nftContract";
 import { useEffect, useState } from "react";
-import { GetContractReturnType, PublicActions, WalletClient } from "viem";
+import { GetContractReturnType } from "viem";
 // Import Contract type if available
 
-const useFundingTokenContract = (
-  walletClient: WalletClient & PublicActions
-) => {
+const useFundingTokenContract = () => {
+  const { walletClient } = useWallet();
   const [tokenContract, setTokenContract] = useState<GetContractReturnType>();
   const [balance, setBalance] = useState<bigint | null>(null);
   const [usdtOwner, setUsdtOwner] = useState<string | null>(null);
   useEffect(() => {
-    console.log("walletClient", walletClient);
     if (!walletClient) return;
     const contract = getClientConnectTokenContract(walletClient);
     setTokenContract(contract);
@@ -43,7 +41,6 @@ const useFundingTokenContract = (
   return {
     balance,
     tokenContract,
-    mintUSDT,
     getBalanceOff,
     getMyTokenBalance,
     usdtOwner,

@@ -1,3 +1,4 @@
+import { useWallet } from "@/contexts/WalletProvider";
 import getClientConnectCrownFundingContract from "@/contract/fundingContract";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PublicActions, WalletClient } from "viem";
@@ -14,13 +15,8 @@ interface RoundInfo {
   rewardDeposit: bigint;
 }
 
-const useFundingContract = ({
-  walletClient,
-  currentAddress,
-}: {
-  walletClient: WalletClient & PublicActions;
-  currentAddress: string;
-}) => {
+const useFundingContract = () => {
+  const { walletClient } = useWallet();
   const [numberOfRound, setNumberOfRound] = useState<bigint[]>([]);
   const [roundLists, setRoundList] = useState<RoundInfo[]>([]);
   const contract = useMemo(
