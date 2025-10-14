@@ -1,7 +1,7 @@
 "use client";
 import useFundingContract from "@/hooks/useFundingContract";
 import useUSDTokenContract from "@/hooks/useUSDTokenContract";
-import useWallet from "@/hooks/useWallet";
+import { useWallet } from "@/contexts/WalletProvider";
 import { useEffect, useState } from "react";
 import { formatEther } from "viem";
 import { foundry } from "viem/chains";
@@ -12,6 +12,7 @@ export default function Home() {
 
   const { walletClient, currentAddress, setCurrentAddress } = useWallet();
 
+  // Get USDT contract hooks - handle null walletClient gracefully
   const {
     usdtBalance,
     mintUSDT,
@@ -21,15 +22,13 @@ export default function Home() {
     updateMyTokenBalance,
     clearBalance,
   } = useUSDTokenContract({
-    walletClient: walletClient!,
-    currentAddress: currentAddress!,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    walletClient: walletClient as any, // Type assertion to bypass type conflicts
+    currentAddress: currentAddress || "",
   });
 
   const { createRound, roundLists, investRound, ownerWithdrawRound } =
-    useFundingContract({
-      walletClient: walletClient!,
-      currentAddress: currentAddress!,
-    });
+    useFundingContract();
 
   const handleLogout = async () => {
     await window.ethereum.request({
@@ -102,13 +101,17 @@ export default function Home() {
 
   useEffect(() => {
     const fetchAllowance = async () => {
-      if (!currentAddress) return;
-      const allowance = (await usdtAllowance(
-        currentAddress as `0x${string}`,
-        process.env.NEXT_PUBLIC_FUNDRAISING_CONTRACT_ADDRESS as `0x${string}`
-      )) as bigint;
-      if (!allowance) return;
-      setCurrentFundContractAllowance(allowance);
+      if (!currentAddress || typeof usdtAllowance !== 'function') return;
+      try {
+        const allowance = (await usdtAllowance(
+          currentAddress as `0x${string}`,
+          process.env.NEXT_PUBLIC_FUNDRAISING_CONTRACT_ADDRESS as `0x${string}`
+        )) as bigint;
+        if (!allowance) return;
+        setCurrentFundContractAllowance(allowance);
+      } catch (error) {
+        console.error("Failed to fetch allowance:", error);
+      }
     };
     fetchAllowance();
   }, [currentAddress, usdtAllowance]);

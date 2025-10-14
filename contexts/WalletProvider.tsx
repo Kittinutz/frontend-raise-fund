@@ -9,7 +9,7 @@ import React, {
   ReactNode,
 } from "react";
 import { createWalletClient, custom, publicActions, WalletClient } from "viem";
-import { localhost } from "viem/chains";
+import { foundry } from "viem/chains";
 
 // Add a type declaration for window.ethereum
 declare global {
@@ -47,7 +47,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
 
     try {
       const client = createWalletClient({
-        chain: localhost,
+        chain: foundry,
         transport: custom(window.ethereum!),
       }).extend(publicActions);
 

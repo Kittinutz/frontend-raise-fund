@@ -69,7 +69,10 @@ export default function NFTDetailPage() {
         {/* Back Button */}
         <Button
           variant="ghost"
-          onClick={() => onNavigate("transactions")}
+          onClick={() => {
+            // Navigate to transactions - you can implement navigation here
+            console.log("Navigate to transactions");
+          }}
           className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />

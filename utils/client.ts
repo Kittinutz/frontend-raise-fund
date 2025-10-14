@@ -8,12 +8,20 @@ declare global {
   }
 }
 
-export const walletClient = createWalletClient({
-  chain: process.env.PRODUCTION == "true" ? foundry : foundry,
-  transport: custom(window.ethereum!),
-});
-
+// Create public client (always available)
 export const publicClient = createPublicClient({
   chain: process.env.PRODUCTION == "true" ? foundry : foundry,
   transport: http(),
 });
+
+// Create wallet client only when window.ethereum is available
+export const createWalletClientInstance = () => {
+  if (typeof window === "undefined" || !window.ethereum) {
+    return null;
+  }
+  
+  return createWalletClient({
+    chain: process.env.PRODUCTION == "true" ? foundry : foundry,
+    transport: custom(window.ethereum),
+  });
+};

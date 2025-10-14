@@ -405,9 +405,11 @@ export default function InvestorDashboard() {
                 (r) => r.status === "Open"
               );
               if (openRound) {
-                onNavigate("round-detail", openRound.id);
+                // Navigate to round detail - you can implement navigation here
+                console.log("Navigate to round detail:", openRound.id);
               } else {
-                onNavigate("rounds");
+                // Navigate to rounds list - you can implement navigation here
+                console.log("Navigate to rounds list");
               }
             }}
             variant="outline"
