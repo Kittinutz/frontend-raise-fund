@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Anuphan } from "next/font/google";
+import { Anuphan } from "next/font/google";
 import "./globals.css";
+import Footer from "@/components/ui/footer";
+import { Header } from "@/components/Header";
 
 const anuphan = Anuphan({
   variable: "--font-anuphan-sans",
@@ -20,7 +22,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${anuphan.className}  antialiased`}>{children}</body>
+      <body className={`${anuphan.className}  antialiased`}>
+        <Header />
+        {children}
+        <Footer />
+      </body>
     </html>
   );
 }

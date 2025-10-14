@@ -1,13 +1,13 @@
 import { getContract, WalletClient } from "viem";
-import usdTokenABI from "./abi/usdtToken";
+import nftTokenABI from "./abi/usdtToken";
 
 const getClientConnectTokenContract = (client: WalletClient) => {
-  const address = process.env.NEXT_PUBLIC_TOKEN_CONTRACT_ADDRESS;
+  const address = process.env.NEXT_PUBLIC_DZNFT_CONTRACT_ADDRESS;
   console.log({
     address,
   });
   return getContract({
-    abi: usdTokenABI,
+    abi: nftTokenABI,
     address: address as `0x${string}`,
     client: {
       wallet: client,

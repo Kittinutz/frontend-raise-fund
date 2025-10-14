@@ -1,76 +1,185 @@
 "use client";
-import FundingRounds from "@/components/FundingRounds";
-import useWallet from "@/hooks/useWallet";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { investmentRounds } from "@/lib/mockData";
+import { TrendingUp, Calendar, Coins } from "lucide-react";
 
-export default function RoundsPage() {
-  const { walletClient, currentAddress, setCurrentAddress } = useWallet();
-
-  const handleConnectWallet = async () => {
-    try {
-      const address = await walletClient?.requestAddresses();
-      setCurrentAddress(address ? address[0] : undefined);
-    } catch (error) {
-      console.error("Failed to connect wallet:", error);
-    }
-  };
-
-  const handleDisconnectWallet = async () => {
-    try {
-      await window.ethereum.request({
-        method: "wallet_revokePermissions",
-        params: [
-          {
-            eth_accounts: {},
-          },
-        ],
-      });
-      setCurrentAddress(undefined);
-    } catch (error) {
-      console.error("Failed to disconnect wallet:", error);
+export default function RoundListPage() {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "Open":
+        return "bg-green-500";
+      case "Closed":
+        return "bg-gray-500";
+      case "Dividends Paid":
+        return "bg-primary";
+      default:
+        return "bg-gray-500";
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-white shadow-sm border-b">
-        <div className="container max-w-6xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                D&Z Abattoir Capital Reserve Protocol
-              </h1>
-              <p className="text-gray-600 mt-1">Investment Rounds Dashboard</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              {currentAddress ? (
-                <div className="flex items-center space-x-4">
-                  <div className="text-sm text-gray-600">
-                    Connected: {currentAddress.slice(0, 6)}...
-                    {currentAddress.slice(-4)}
-                  </div>
-                  <button
-                    onClick={handleDisconnectWallet}
-                    className="px-4 py-2 text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    Disconnect
-                  </button>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Header */}
+        <div className="mb-12">
+          <h1 className="text-3xl md:text-4xl mb-4">Investment Rounds</h1>
+          <p className="text-lg text-gray-600">
+            Browse all investment rounds and track their progress
+          </p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid sm:grid-cols-3 gap-6 mb-12">
+          <Card className="border-2 border-primary/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Total Rounds</CardTitle>
+                <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                  <Coins className="h-5 w-5 text-primary" />
                 </div>
-              ) : (
-                <button
-                  onClick={handleConnectWallet}
-                  className="px-4 py-2 text-green-600 border border-green-600 rounded-lg hover:bg-green-50 transition-colors"
-                >
-                  Connect Wallet
-                </button>
-              )}
-            </div>
-          </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl text-primary">{investmentRounds.length}</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-green-100">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Active Rounds</CardTitle>
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <TrendingUp className="h-5 w-5 text-green-700" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl text-green-700">
+                {investmentRounds.filter((r) => r.status === "Open").length}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-2 border-accent/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Total Investment</CardTitle>
+                <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
+                  <Calendar className="h-5 w-5 text-accent" />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl text-accent">
+                $
+                {investmentRounds
+                  .reduce((sum, r) => sum + r.totalInvestment, 0)
+                  .toLocaleString()}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Rounds List */}
+        <div className="space-y-6">
+          {investmentRounds.map((round) => {
+            const progressPercentage =
+              (round.tokensSold / round.totalTokens) * 100;
+
+            return (
+              <Card
+                key={round.id}
+                className="border-2 hover:border-primary/30 transition-all hover:shadow-lg"
+              >
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between flex-wrap gap-4">
+                    <div>
+                      <CardTitle className="text-xl mb-2">
+                        {round.name}
+                      </CardTitle>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          {new Date(round.startDate).toLocaleDateString()} -{" "}
+                          {new Date(round.roundEndDate).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                    <Badge className={getStatusColor(round.status)}>
+                      {round.status}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">
+                        Dividend Rate
+                      </p>
+                      <p className="text-xl text-primary">
+                        {round.dividendPercentage}%
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {round.dividendOption}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">
+                        Total Investment
+                      </p>
+                      <p className="text-xl text-primary">
+                        ${round.totalInvestment.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Tokens Sold</p>
+                      <p className="text-xl text-primary">
+                        {round.tokensSold} / {round.totalTokens}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Remaining</p>
+                      <p className="text-xl text-primary">
+                        {round.tokensRemaining}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">
+                        Investment Ends
+                      </p>
+                      <p className="text-sm text-primary">
+                        {new Date(round.investmentEndDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="mb-6">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-gray-600">Progress</span>
+                      <span className="text-gray-900">
+                        {progressPercentage.toFixed(1)}%
+                      </span>
+                    </div>
+                    <Progress value={progressPercentage} className="h-2" />
+                  </div>
+
+                  {/* Action Button */}
+                  <Button
+                    // onClick={() => onNavigate("round-detail", round.id)}
+                    className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                  >
+                    View Round Detail
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
-
-      <main>
-        <FundingRounds />
-      </main>
     </div>
   );
 }
