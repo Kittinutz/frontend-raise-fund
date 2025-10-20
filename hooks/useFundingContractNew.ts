@@ -22,19 +22,19 @@ interface FundingContractHook {
   contract: ReturnType<typeof getClientConnectCrownFundingContract> | null;
   totalRounds: bigint | null;
   rounds: InvestmentRound[];
-  
+
   // Loading states
   isLoading: boolean;
   isTransacting: boolean;
-  
+
   // Error handling
   error: string | null;
-  
+
   // Read functions
   getInvestmentRound: (roundId: bigint) => Promise<InvestmentRound>;
   getTotalRoundsCreated: () => Promise<bigint>;
   refreshRounds: () => Promise<void>;
-  
+
   // Write functions
   createInvestmentRound: (params: CreateRoundParams) => Promise<string>;
   investInRound: (roundId: bigint, tokenAmount: bigint) => Promise<string>;
@@ -51,15 +51,15 @@ interface CreateRoundParams {
 
 const useFundingContract = (): FundingContractHook => {
   const { walletClient, isConnected, currentAddress } = useWallet();
-  
+
   // Data states
   const [totalRounds, setTotalRounds] = useState<bigint | null>(null);
   const [rounds, setRounds] = useState<InvestmentRound[]>([]);
-  
+
   // Loading states
   const [isLoading, setIsLoading] = useState(false);
   const [isTransacting, setIsTransacting] = useState(false);
-  
+
   // Error state
   const [error, setError] = useState<string | null>(null);
 
@@ -80,14 +80,15 @@ const useFundingContract = (): FundingContractHook => {
     if (!contract || !contract.read) {
       throw new Error("Contract not initialized");
     }
-    
+
     try {
       setError(null);
       const total = await contract.read.totalRoundsCreated();
       console.log("Total rounds fetched:", total);
       return total as bigint;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to get total rounds";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to get total rounds";
       setError(errorMessage);
       throw new Error(errorMessage);
     }
@@ -104,7 +105,7 @@ const useFundingContract = (): FundingContractHook => {
         setError(null);
         const result = await contract.read.getInvestmentRound([roundId]);
         console.log("Round info fetched:", result);
-        
+
         // The result is a tuple/struct, we need to destructure it
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const roundData = result as any; // Cast to any first to avoid type issues
@@ -136,7 +137,8 @@ const useFundingContract = (): FundingContractHook => {
           createdAt,
         };
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to get round info";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to get round info";
         setError(errorMessage);
         throw new Error(errorMessage);
       }
@@ -162,19 +164,20 @@ const useFundingContract = (): FundingContractHook => {
       // Fetch all rounds if total > 0
       if (total > BigInt(0)) {
         const roundPromises: Promise<InvestmentRound>[] = [];
-        
+
         // Create promises for all rounds (assuming round IDs start from 1)
         for (let i = BigInt(1); i <= total; i++) {
           roundPromises.push(getInvestmentRound(i));
         }
 
         const allRounds = await Promise.all(roundPromises);
-        setRounds(allRounds.filter(round => round.exists)); // Filter out non-existent rounds
+        setRounds(allRounds.filter((round) => round.exists)); // Filter out non-existent rounds
       } else {
         setRounds([]);
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to refresh rounds";
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to refresh rounds";
       console.error("Refresh rounds error:", err);
       setError(errorMessage);
     } finally {
@@ -209,23 +212,24 @@ const useFundingContract = (): FundingContractHook => {
         });
 
         const hash = await walletClient.writeContract(request);
-        
+
         const receipt = await publicClient.waitForTransactionReceipt({
           hash,
         });
 
         console.log("Create round receipt:", receipt);
-        
+
         if (receipt.status !== "success") {
           throw new Error("Transaction failed");
         }
 
         // Refresh rounds after successful creation
         await refreshRounds();
-        
+
         return hash;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to create round";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to create round";
         setError(errorMessage);
         throw new Error(errorMessage);
       } finally {
@@ -255,23 +259,24 @@ const useFundingContract = (): FundingContractHook => {
         });
 
         const hash = await walletClient.writeContract(request);
-        
+
         const receipt = await publicClient.waitForTransactionReceipt({
           hash,
         });
 
         console.log("Invest receipt:", receipt);
-        
+
         if (receipt.status !== "success") {
           throw new Error("Transaction failed");
         }
 
         // Refresh rounds after successful investment
         await refreshRounds();
-        
+
         return hash;
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to invest in round";
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to invest in round";
         setError(errorMessage);
         throw new Error(errorMessage);
       } finally {
@@ -293,19 +298,19 @@ const useFundingContract = (): FundingContractHook => {
     contract,
     totalRounds,
     rounds,
-    
+
     // Loading states
     isLoading,
     isTransacting,
-    
+
     // Error handling
     error,
-    
+
     // Read functions
     getInvestmentRound,
     getTotalRoundsCreated,
     refreshRounds,
-    
+
     // Write functions
     createInvestmentRound,
     investInRound,

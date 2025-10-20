@@ -3,10 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { TrendingUp, Calendar, Coins, DollarSign } from "lucide-react";
+import useFundingContract from "@/hooks/useFundingContract";
+import useUSDTokenContract from "@/hooks/useUSDTokenContract";
 import { investmentRounds } from "@/lib/mockData";
-import { TrendingUp, Calendar, Coins } from "lucide-react";
+import { etherUnits, formatEther, parseEther } from "viem";
+import Link from "next/link";
 
 export default function RoundListPage() {
+  const { totalRounds, roundList, fundingContractAddress, investRounds } =
+    useFundingContract();
+  const { handleApprove } = useUSDTokenContract();
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Open":
@@ -19,7 +26,16 @@ export default function RoundListPage() {
         return "bg-gray-500";
     }
   };
-
+  console.log("roundList", roundList);
+  const handleInvestment =
+    (roundId: bigint, roundTokenPrice: bigint) => async () => {
+      await handleApprove(
+        fundingContractAddress as `0x${string}`,
+        10n,
+        roundTokenPrice
+      );
+      await investRounds(roundId, 10n);
+    };
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -43,7 +59,7 @@ export default function RoundListPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl text-primary">{investmentRounds.length}</p>
+              <p className="text-3xl text-primary">{totalRounds}</p>
             </CardContent>
           </Card>
 
@@ -58,7 +74,7 @@ export default function RoundListPage() {
             </CardHeader>
             <CardContent>
               <p className="text-3xl text-green-700">
-                {investmentRounds.filter((r) => r.status === "Open").length}
+                {roundList.filter((r) => r.isActive === true).length}
               </p>
             </CardContent>
           </Card>
@@ -68,15 +84,19 @@ export default function RoundListPage() {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Total Investment</CardTitle>
                 <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-accent" />
+                  <DollarSign className="h-5 w-5 text-accent" />
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <p className="text-3xl text-accent">
                 $
-                {investmentRounds
-                  .reduce((sum, r) => sum + r.totalInvestment, 0)
+                {roundList
+                  .reduce(
+                    (sum, r) =>
+                      sum + +formatEther(r.tokenPrice) * Number(r.tokensSold),
+                    0
+                  )
                   .toLocaleString()}
               </p>
             </CardContent>
@@ -85,31 +105,42 @@ export default function RoundListPage() {
 
         {/* Rounds List */}
         <div className="space-y-6">
-          {investmentRounds.map((round) => {
+          {roundList.map((round) => {
             const progressPercentage =
-              (round.tokensSold / round.totalTokens) * 100;
+              (Number(round.tokensSold) /
+                Number(round.totalTokenOpenInvestment)) *
+              100;
 
             return (
               <Card
-                key={round.id}
+                key={round.roundId.toString()}
                 className="border-2 hover:border-primary/30 transition-all hover:shadow-lg"
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between flex-wrap gap-4">
                     <div>
                       <CardTitle className="text-xl mb-2">
-                        {round.name}
+                        {round.roundName}
                       </CardTitle>
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Calendar className="h-4 w-4" />
                         <span>
-                          {new Date(round.startDate).toLocaleDateString()} -{" "}
-                          {new Date(round.roundEndDate).toLocaleDateString()}
+                          {new Date(
+                            Number(round.createdAt)
+                          ).toLocaleDateString()}{" "}
+                          -
+                          {new Date(
+                            Number(round.endDateInvestment)
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
-                    <Badge className={getStatusColor(round.status)}>
-                      {round.status}
+                    <Badge
+                      className={getStatusColor(
+                        round.isActive ? "Open" : "Closed"
+                      )}
+                    >
+                      {round.isActive ? "Open" : "Closed"}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -120,30 +151,31 @@ export default function RoundListPage() {
                         Dividend Rate
                       </p>
                       <p className="text-xl text-primary">
-                        {round.dividendPercentage}%
+                        {round.rewardPercentage}%
                       </p>
-                      <p className="text-xs text-gray-500">
-                        {round.dividendOption}
-                      </p>
+                      <p className="text-xs text-gray-500">3% every 6 months</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">
                         Total Investment
                       </p>
                       <p className="text-xl text-primary">
-                        ${round.totalInvestment.toLocaleString()}
+                        $
+                        {formatEther(
+                          round.tokensSold * round.tokenPrice
+                        ).toLocaleString()}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Tokens Sold</p>
                       <p className="text-xl text-primary">
-                        {round.tokensSold} / {round.totalTokens}
+                        {round.tokensSold} / {round.totalTokenOpenInvestment}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">Remaining</p>
                       <p className="text-xl text-primary">
-                        {round.tokensRemaining}
+                        {round.totalTokenOpenInvestment - round.tokensSold}{" "}
                       </p>
                     </div>
                     <div>
@@ -151,7 +183,9 @@ export default function RoundListPage() {
                         Investment Ends
                       </p>
                       <p className="text-sm text-primary">
-                        {new Date(round.investmentEndDate).toLocaleDateString()}
+                        {new Date(
+                          Number(round.endDateInvestment)
+                        ).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -168,12 +202,11 @@ export default function RoundListPage() {
                   </div>
 
                   {/* Action Button */}
-                  <Button
-                    // onClick={() => onNavigate("round-detail", round.id)}
-                    className="w-full sm:w-auto bg-primary hover:bg-primary/90"
-                  >
-                    View Round Detail
-                  </Button>
+                  <Link href={`/rounds/${round.roundId.toString()}`}>
+                    <Button className="w-full sm:w-auto bg-primary hover:bg-primary/90">
+                      View Round Detail
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             );

@@ -1,3 +1,4 @@
+import { useWallet } from "@/contexts/WalletProvider";
 import getClientConnectUsdContract from "@/contract/usdtContract";
 import { useCallback, useEffect, useState } from "react";
 import { GetContractReturnType, PublicActions, WalletClient } from "viem";
@@ -21,13 +22,9 @@ import { foundry } from "viem/chains";
  * - Actions: mintUSDT, handleApprove (auto-refresh balance)
  * - Utilities: getBalanceOf, updateMyTokenBalance, refreshBalanceAfterAction
  */
-const useUSDTokenContract = ({
-  walletClient,
-  currentAddress,
-}: {
-  walletClient: WalletClient & PublicActions;
-  currentAddress: string;
-}) => {
+const useUSDTokenContract = () => {
+  const { walletClient } = useWallet();
+
   const [usdTokenContract, setTokenContract] =
     useState<GetContractReturnType>();
   const [usdtBalance, setUsdtBalance] = useState<bigint | null>(null);
@@ -152,6 +149,11 @@ const useUSDTokenContract = ({
     tokenAmount: bigint,
     pricePerToken: bigint
   ) => {
+    console.log({
+      spender,
+      tokenAmount,
+      pricePerToken,
+    });
     if (!usdTokenContract) return;
     setIsLoading(true);
     setError(null);
@@ -230,7 +232,7 @@ const useUSDTokenContract = ({
       }
     };
     fetchCurrentWalletUSDTBalance();
-  }, [usdTokenContract, walletClient, currentAddress, getBalanceOf]);
+  }, [usdTokenContract, walletClient, getBalanceOf]);
 
   return {
     // State

@@ -553,6 +553,399 @@ const crowdFundingABI = [
     inputs: [
       {
         internalType: "uint256",
+        name: "offset",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "limit",
+        type: "uint256",
+      },
+      {
+        internalType: "enum FundRaisingContractNFT.SortField",
+        name: "sortField",
+        type: "uint8",
+      },
+      {
+        internalType: "enum FundRaisingContractNFT.SortDirection",
+        name: "sortDirection",
+        type: "uint8",
+      },
+    ],
+    name: "getAllRoundsDetailedPaginated",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "roundId",
+            type: "uint256",
+          },
+          {
+            internalType: "string",
+            name: "roundName",
+            type: "string",
+          },
+          {
+            internalType: "uint256",
+            name: "tokenPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "rewardPercentage",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalTokenOpenInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "tokensSold",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "closeDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "endDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "bool",
+            name: "isActive",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "exists",
+            type: "bool",
+          },
+          {
+            internalType: "uint256",
+            name: "createdAt",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct FundRaisingContractNFT.InvestmentRound[]",
+        name: "rounds",
+        type: "tuple[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "investorCounts",
+        type: "uint256[]",
+      },
+      {
+        internalType: "uint256",
+        name: "totalPages",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "currentPage",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "hasMore",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "offset",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "limit",
+        type: "uint256",
+      },
+    ],
+    name: "getAllRoundsDetailedPaginatedDefault",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "roundId",
+            type: "uint256",
+          },
+          {
+            internalType: "string",
+            name: "roundName",
+            type: "string",
+          },
+          {
+            internalType: "uint256",
+            name: "tokenPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "rewardPercentage",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalTokenOpenInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "tokensSold",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "closeDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "endDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "bool",
+            name: "isActive",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "exists",
+            type: "bool",
+          },
+          {
+            internalType: "uint256",
+            name: "createdAt",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct FundRaisingContractNFT.InvestmentRound[]",
+        name: "rounds",
+        type: "tuple[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "investorCounts",
+        type: "uint256[]",
+      },
+      {
+        internalType: "uint256",
+        name: "totalPages",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "currentPage",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "hasMore",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getAllRoundsSummary",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "roundIds",
+        type: "uint256[]",
+      },
+      {
+        internalType: "string[]",
+        name: "roundNames",
+        type: "string[]",
+      },
+      {
+        internalType: "bool[]",
+        name: "roundStatuses",
+        type: "bool[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "totalRaised",
+        type: "uint256[]",
+      },
+      {
+        internalType: "bool[]",
+        name: "isInvestmentOpenArray",
+        type: "bool[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "offset",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "limit",
+        type: "uint256",
+      },
+      {
+        internalType: "enum FundRaisingContractNFT.SortField",
+        name: "sortField",
+        type: "uint8",
+      },
+      {
+        internalType: "enum FundRaisingContractNFT.SortDirection",
+        name: "sortDirection",
+        type: "uint8",
+      },
+    ],
+    name: "getAllRoundsSummaryPaginated",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "roundIds",
+        type: "uint256[]",
+      },
+      {
+        internalType: "string[]",
+        name: "roundNames",
+        type: "string[]",
+      },
+      {
+        internalType: "bool[]",
+        name: "roundStatuses",
+        type: "bool[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "totalRaised",
+        type: "uint256[]",
+      },
+      {
+        internalType: "bool[]",
+        name: "isInvestmentOpenArray",
+        type: "bool[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "availableTokensArray",
+        type: "uint256[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "daysUntilCloseArray",
+        type: "uint256[]",
+      },
+      {
+        internalType: "uint256",
+        name: "totalPages",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "currentPage",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "hasMore",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "offset",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "limit",
+        type: "uint256",
+      },
+    ],
+    name: "getAllRoundsSummaryPaginatedDefault",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "roundIds",
+        type: "uint256[]",
+      },
+      {
+        internalType: "string[]",
+        name: "roundNames",
+        type: "string[]",
+      },
+      {
+        internalType: "bool[]",
+        name: "roundStatuses",
+        type: "bool[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "totalRaised",
+        type: "uint256[]",
+      },
+      {
+        internalType: "bool[]",
+        name: "isInvestmentOpenArray",
+        type: "bool[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "availableTokensArray",
+        type: "uint256[]",
+      },
+      {
+        internalType: "uint256[]",
+        name: "daysUntilCloseArray",
+        type: "uint256[]",
+      },
+      {
+        internalType: "uint256",
+        name: "totalPages",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "currentPage",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "hasMore",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
         name: "roundId",
         type: "uint256",
       },
@@ -732,6 +1125,117 @@ const crowdFundingABI = [
         type: "uint256",
       },
     ],
+    name: "getRoundInformation",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "roundId",
+            type: "uint256",
+          },
+          {
+            internalType: "string",
+            name: "roundName",
+            type: "string",
+          },
+          {
+            internalType: "uint256",
+            name: "tokenPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "rewardPercentage",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalTokenOpenInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "tokensSold",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "closeDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "endDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "bool",
+            name: "isActive",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "exists",
+            type: "bool",
+          },
+          {
+            internalType: "uint256",
+            name: "createdAt",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct FundRaisingContractNFT.InvestmentRound",
+        name: "roundInfo",
+        type: "tuple",
+      },
+      {
+        internalType: "uint256",
+        name: "totalUSDTRaisedInRound",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "totalInvestors",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "availableTokens",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "isInvestmentOpen",
+        type: "bool",
+      },
+      {
+        internalType: "bool",
+        name: "isRedemptionOpen",
+        type: "bool",
+      },
+      {
+        internalType: "uint256",
+        name: "daysUntilClose",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "daysUntilRedemption",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "roundId",
+        type: "uint256",
+      },
+    ],
     name: "getRoundInvestors",
     outputs: [
       {
@@ -743,6 +1247,50 @@ const crowdFundingABI = [
         internalType: "uint256[]",
         name: "nftCounts",
         type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "roundId",
+        type: "uint256",
+      },
+    ],
+    name: "getRoundMetrics",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "soldPercentage",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "averageInvestmentSize",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "totalRewardsPaid",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "totalPrincipalRedeemed",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "earlyRewardsClaimed",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "fullRedemptions",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -780,6 +1328,24 @@ const crowdFundingABI = [
       {
         internalType: "uint256",
         name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getRoundsCount",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "totalRounds",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "activeRounds",
         type: "uint256",
       },
     ],

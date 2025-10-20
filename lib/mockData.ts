@@ -75,7 +75,7 @@ export interface NFT {
 
 export const investmentRounds: InvestmentRound[] = [
   {
-    id: "1",
+    id: "0",
     name: "Round 1 - 2025",
     dividendPercentage: 3,
     dividendOption: "3% every 6 months",

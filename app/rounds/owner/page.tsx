@@ -1,9 +1,16 @@
-import React from 'react';
-import useFundingContract from '@/hooks/useFundingContractNew';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
+"use client";
+import React from "react";
+import useFundingContract from "@/hooks/useFundingContractNew";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 const FundingRoundsPage: React.FC = () => {
   const {
@@ -28,7 +35,7 @@ const FundingRoundsPage: React.FC = () => {
         endDateInvestment: BigInt(Math.floor(Date.now() / 1000) + 86400 * 7), // 7 days from now
       });
     } catch (err) {
-      console.error('Failed to create round:', err);
+      console.error("Failed to create round:", err);
     }
   };
 
@@ -36,7 +43,7 @@ const FundingRoundsPage: React.FC = () => {
     try {
       await investInRound(roundId, BigInt(100)); // Invest 100 tokens
     } catch (err) {
-      console.error('Failed to invest:', err);
+      console.error("Failed to invest:", err);
     }
   };
 
@@ -70,15 +77,21 @@ const FundingRoundsPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold">Funding Rounds</h1>
           {totalRounds !== null && (
-            <p className="text-gray-600">Total rounds: {totalRounds.toString()}</p>
+            <p className="text-gray-600">
+              Total rounds: {totalRounds.toString()}
+            </p>
           )}
         </div>
         <div className="space-x-2">
-          <Button onClick={refreshRounds} variant="outline" disabled={isLoading}>
-            {isLoading ? 'Loading...' : 'Refresh'}
+          <Button
+            onClick={refreshRounds}
+            variant="outline"
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : "Refresh"}
           </Button>
           <Button onClick={handleCreateRound} disabled={isTransacting}>
-            {isTransacting ? 'Creating...' : 'Create Round'}
+            {isTransacting ? "Creating..." : "Create Round"}
           </Button>
         </div>
       </div>
@@ -95,9 +108,12 @@ const FundingRoundsPage: React.FC = () => {
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {rounds.map((round) => {
-            const progress = calculateProgress(round.tokensSold, round.totalTokenOpenInvestment);
+            const progress = calculateProgress(
+              round.tokensSold,
+              round.totalTokenOpenInvestment
+            );
             const isActive = round.isActive && round.exists;
-            
+
             return (
               <Card key={round.roundId.toString()} className="w-full">
                 <CardHeader>
@@ -121,36 +137,47 @@ const FundingRoundsPage: React.FC = () => {
                       <Progress value={progress} className="w-full" />
                       <div className="flex justify-between text-xs text-gray-500 mt-1">
                         <span>{formatTokenAmount(round.tokensSold)} sold</span>
-                        <span>{formatTokenAmount(round.totalTokenOpenInvestment)} total</span>
+                        <span>
+                          {formatTokenAmount(round.totalTokenOpenInvestment)}{" "}
+                          total
+                        </span>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <p className="text-gray-600">Token Price</p>
-                        <p className="font-semibold">{formatTokenAmount(round.tokenPrice)} wei</p>
+                        <p className="font-semibold">
+                          {formatTokenAmount(round.tokenPrice)} wei
+                        </p>
                       </div>
                       <div>
                         <p className="text-gray-600">Reward %</p>
-                        <p className="font-semibold">{round.rewardPercentage.toString()}%</p>
+                        <p className="font-semibold">
+                          {round.rewardPercentage.toString()}%
+                        </p>
                       </div>
                       <div>
                         <p className="text-gray-600">Close Date</p>
-                        <p className="font-semibold">{formatDate(round.closeDateInvestment)}</p>
+                        <p className="font-semibold">
+                          {formatDate(round.closeDateInvestment)}
+                        </p>
                       </div>
                       <div>
                         <p className="text-gray-600">End Date</p>
-                        <p className="font-semibold">{formatDate(round.endDateInvestment)}</p>
+                        <p className="font-semibold">
+                          {formatDate(round.endDateInvestment)}
+                        </p>
                       </div>
                     </div>
 
                     {isActive && (
-                      <Button 
+                      <Button
                         onClick={() => handleInvest(round.roundId)}
                         disabled={isTransacting}
                         className="w-full"
                       >
-                        {isTransacting ? 'Investing...' : 'Invest'}
+                        {isTransacting ? "Investing..." : "Invest"}
                       </Button>
                     )}
                   </div>

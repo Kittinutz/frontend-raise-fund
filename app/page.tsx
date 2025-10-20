@@ -294,18 +294,11 @@ export default function LandingPage() {
                     data-test-id="invest-buttons"
                     className="flex flex-col sm:flex-row gap-4"
                   >
-                    <Button
-                      // onClick={() =>
-                      // onNavigate("round-detail", currentRound.id)
-                      // }
-                      className="flex-1 bg-primary hover:bg-primary/90"
-                      size="lg"
-                    >
-                      Invest Now
-                    </Button>
-                    <Button variant="outline" className="flex-1" size="lg">
-                      View All Rounds
-                    </Button>
+                    <Link href="/rounds">
+                      <Button variant="outline" className="flex-1" size="lg">
+                        View All Rounds
+                      </Button>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>

@@ -101,7 +101,7 @@ export default function Home() {
 
   useEffect(() => {
     const fetchAllowance = async () => {
-      if (!currentAddress || typeof usdtAllowance !== 'function') return;
+      if (!currentAddress || typeof usdtAllowance !== "function") return;
       try {
         const allowance = (await usdtAllowance(
           currentAddress as `0x${string}`,

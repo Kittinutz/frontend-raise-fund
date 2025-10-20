@@ -7,21 +7,17 @@ import {
 } from "viem";
 import fundingContractABI from "./abi/fundingContract";
 import { publicClient } from "@/utils/client";
+import { foundry } from "viem/chains";
 
-type FundingContract = GetContractReturnType<
-  typeof fundingContractABI,
-  PublicClient
->;
-
-const getClientConnectCrownFundingContract = (
-  client: WalletClient
-): FundingContract => {
+const getClientConnectCrownFundingContract = (walletClient: WalletClient) => {
+  console.log("account", walletClient.account);
   const address = process.env.NEXT_PUBLIC_FUNDRAISING_CONTRACT_ADDRESS;
   return getContract({
     abi: fundingContractABI,
     client: {
+      wallet: walletClient,
       public: publicClient,
-      wallet: client,
+      account: walletClient.account,
     },
     address: address as `0x${string}`,
   });

@@ -1,5 +1,11 @@
 import { useWallet } from "@/contexts/WalletProvider";
 import getClientConnectCrownFundingContract from "@/contract/fundingContract";
+import {
+  InterfaceRoundDetailPaginated,
+  InvestmentRound,
+  SortDirection,
+  SortField,
+} from "@/types/fundingContract";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { foundry } from "viem/chains";
 
@@ -20,19 +26,19 @@ interface FundingContractHook {
   contract: ReturnType<typeof getClientConnectCrownFundingContract> | null;
   numberOfRound: bigint[];
   roundLists: RoundInfo[];
-  
+
   // Loading states
   isLoading: boolean;
   isTransacting: boolean;
-  
+
   // Error handling
   error: string | null;
-  
+
   // Read functions
   getRoundInfo: (roundId: bigint) => Promise<RoundInfo>;
   getRoundListArr: (active: boolean) => Promise<bigint[]>;
   refreshRounds: () => Promise<void>;
-  
+
   // Write functions
   createRound: (params: CreateRoundParams) => Promise<string>;
   investRound: (roundId: bigint, tokenAmount: bigint) => Promise<string>;
@@ -47,261 +53,140 @@ interface CreateRoundParams {
   roundEndDate: bigint;
 }
 
-const useFundingContract = (): FundingContractHook => {
-  const { walletClient, isConnected } = useWallet();
-  
-  // Data states
-  const [numberOfRound, setNumberOfRound] = useState<bigint[]>([]);
-  const [roundLists, setRoundList] = useState<RoundInfo[]>([]);
-  
-  // Loading states
-  const [isLoading, setIsLoading] = useState(false);
-  const [isTransacting, setIsTransacting] = useState(false);
-  
-  // Error state
-  const [error, setError] = useState<string | null>(null);
+const useFundingContract = () => {
+  const { walletClient, currentAddress } = useWallet();
+  const [roundList, setRoundList] = useState<InvestmentRound[]>([]);
+  const [selectedRound, setSelectedRound] = useState<InvestmentRound | null>(
+    null
+  );
+  const [selectedRoundId, setSelectedRoundId] = useState<bigint | null>(null);
+  const [pagination, setPagination] = useState({
+    offset: 0,
+    limit: 1,
+    currentPage: 1,
+    sortField: SortField.CREATED_AT,
+    sortDirection: SortDirection.DESC,
+  });
 
-  // Memoized contract instance
+  const [totalRounds, setTotalRounds] = useState<bigint | null>(null);
+
   const contract = useMemo(() => {
     if (!walletClient) return null;
-    try {
-      return getClientConnectCrownFundingContract(walletClient);
-    } catch (err) {
-      console.error("Failed to initialize contract:", err);
-      setError("Failed to initialize contract");
-      return null;
-    }
+    return getClientConnectCrownFundingContract(walletClient);
   }, [walletClient]);
 
-  // Get round list array
-  const getRoundListArr = useCallback(
-    async (active: boolean): Promise<bigint[]> => {
-      if (!contract || !contract.read) {
-        throw new Error("Contract not initialized");
-      }
-      
+  const fetchTotalRounds = useCallback(async () => {
+    try {
+      return await contract?.read.totalRoundsCreated();
+    } catch (error) {
+      console.error("Error fetching total rounds:", error);
+    }
+  }, [contract]);
+
+  const fetchAllRoundsDetailPaginated = useCallback(
+    async ({
+      offset = BigInt(0),
+      limit = BigInt(0),
+      sortField = SortField.CREATED_AT,
+      sortDirection = SortDirection.DESC,
+    }: InterfaceRoundDetailPaginated) => {
       try {
-        setError(null);
-        const roundList = await contract.read.getRoundList([active]);
-        console.log("Round list fetched:", roundList);
-        return roundList as bigint[];
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to get round list";
-        setError(errorMessage);
-        throw new Error(errorMessage);
+        if (!contract) return [];
+        const roundList = await contract.read.getAllRoundsDetailedPaginated([
+          offset,
+          limit,
+          sortField,
+          sortDirection,
+        ]);
+        return roundList;
+      } catch (error) {
+        console.error("Error fetching rounds:", error);
+        return [];
       }
     },
     [contract]
   );
 
-  // Get round info
-  const getRoundInfo = useCallback(
-    async (roundId: bigint): Promise<RoundInfo> => {
-      if (!contract || !contract.read) {
-        throw new Error("Contract not initialized");
-      }
-
+  const fetchRoundById = useCallback(
+    async (roundId: bigint) => {
       try {
-        setError(null);
-        const result = await contract.read.getRoundInfo([roundId]);
-        const [
-          roundIdResult,
-          pricePerToken,
-          rewardPercentage,
-          investEndDate,
-          roundEndDate,
-          totalTokens,
-          tokensSold,
-          isActive,
-          rewardDeposit,
-        ] = result as [
-          bigint,
-          bigint,
-          bigint,
-          bigint,
-          bigint,
-          bigint,
-          bigint,
-          boolean,
-          bigint
-        ];
-
-        return {
-          roundId: roundIdResult,
-          pricePerToken,
-          rewardPercentage,
-          investEndDate,
-          roundEndDate,
-          totalTokens,
-          tokensSold,
-          isActive,
-          rewardDeposit,
-        };
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to get round info";
-        setError(errorMessage);
-        throw new Error(errorMessage);
+        if (!contract) return null;
+        const roundDetail = await contract.read.getInvestmentRound([roundId]);
+        return roundDetail;
+      } catch (error) {
+        console.error("Error fetching round by ID:", error);
+        return null;
       }
     },
     [contract]
   );
+  const investRounds = useCallback(
+    async (roundIds: bigint, amount: number) => {
+      console.log("investRounds", roundIds, amount);
 
-  const ownerWithdrawRound = async (roundId: bigint) => {
-    const address = await walletClient.getAddresses();
-    if (address.length === 0) return;
-    const { request } = await walletClient.simulateContract({
-      abi: contract.abi,
-      address: contract.address as `0x${string}`,
-      functionName: "ownerWithdrawRound",
-      account: address[0],
-      chain: foundry,
-      args: [roundId],
-    });
-    const hash = await walletClient.writeContract(request);
-    const receipt = await walletClient.waitForTransactionReceipt({
-      hash,
-    });
-    console.log("receipt", receipt);
-    if (receipt.status !== "success") {
-      throw new Error("Transaction failed");
-    }
-    return hash;
-  };
-
-  const createRound = async ({
-    pricePerToken,
-    rewardPercentage,
-    totalTokens,
-    investEndDate,
-    roundEndDate,
-  }: {
-    pricePerToken: bigint;
-    rewardPercentage: bigint;
-    totalTokens: bigint;
-    investEndDate: bigint;
-    roundEndDate: bigint;
-  }) => {
-    const address = await walletClient.getAddresses();
-    if (address.length === 0) return;
-    const { request } = await walletClient.simulateContract({
-      abi: contract.abi,
-      address: process.env
-        .NEXT_PUBLIC_FUNDRAISING_CONTRACT_ADDRESS as `0x${string}`,
-      functionName: "createRound",
-      account: address[0],
-      chain: foundry,
-      args: [
-        BigInt(pricePerToken) * BigInt(10) ** BigInt(18),
-        totalTokens,
-        rewardPercentage,
-        investEndDate,
-        roundEndDate,
-      ],
-    });
-    const hash = await walletClient.writeContract(request);
-    const receipt = await walletClient.waitForTransactionReceipt({
-      hash,
-    });
-    console.log("receipt", receipt);
-    if (receipt.status !== "success") {
-      throw new Error("Transaction failed");
-    }
-    return hash;
-  };
-
-  useEffect(() => {
-    async function fetchNumberOfRound() {
-      const number = await getRoundListArr(false);
-      return setNumberOfRound(number);
-    }
-    fetchNumberOfRound();
-  }, [getRoundListArr]);
-  useEffect(() => {
-    async function fetchRoundListDetail() {
-      const detailPromise = [];
-      if (!numberOfRound?.length) return;
-      for (let i = 0; i < numberOfRound.length; i++) {
-        const promisePayload = contract.read.getRoundInfo([
-          numberOfRound[i],
-        ]) as Promise<
-          [
-            bigint,
-            bigint,
-            bigint,
-            bigint,
-            bigint,
-            bigint,
-            bigint,
-            boolean,
-            bigint
-          ]
-        >;
-        detailPromise.push(promisePayload);
+      if (!currentAddress) {
+        console.error("No wallet address available");
+        return;
       }
-      const roundDetailsList = await Promise.all(detailPromise);
-      const resultRoundDetailList = roundDetailsList.map((v) => {
-        const [
-          roundId,
-          pricePerToken,
-          rewardPercentage,
-          investEndDate,
-          roundEndDate,
-          totalTokens,
-          tokensSold,
-          isActive,
-          rewardDeposit,
-        ] = v;
-        return {
-          roundId,
-          pricePerToken,
-          rewardPercentage,
-          investEndDate,
-          roundEndDate,
-          totalTokens,
-          tokensSold,
-          isActive,
-          rewardDeposit,
-        };
+
+      try {
+        await contract?.write.investInRound([roundIds, BigInt(amount)], {
+          account: currentAddress as `0x${string}`,
+          chain: foundry,
+        });
+        const [roundListData] = await fetchAllRoundsDetailPaginated({
+          offset: BigInt(pagination.offset),
+          limit: BigInt(pagination.limit),
+          sortField: pagination.sortField,
+          sortDirection: pagination.sortDirection,
+        });
+        setRoundList([...(roundListData ?? [])]);
+      } catch (e) {
+        console.error("Error investing in round:", e);
+      }
+    },
+    [contract, currentAddress, pagination, fetchAllRoundsDetailPaginated]
+  );
+  useEffect(() => {
+    async function fetchRound() {
+      if (selectedRoundId) {
+        const round = await fetchRoundById(selectedRoundId);
+        setSelectedRound(round);
+      }
+    }
+    fetchRound();
+  }, [fetchRoundById, selectedRoundId]);
+
+  useEffect(() => {
+    async function initialize() {
+      const rounds = await fetchTotalRounds();
+      const [roundListData] = await fetchAllRoundsDetailPaginated({
+        offset: BigInt(pagination.offset),
+        limit: BigInt(1),
+        sortField: pagination.sortField,
+        sortDirection: pagination.sortDirection,
       });
-      setRoundList(resultRoundDetailList);
+      setRoundList([...(roundListData ?? [])]);
+      setTotalRounds(rounds || null);
     }
-    fetchRoundListDetail();
-  }, [contract.read, numberOfRound]);
-
-  const investRound = async (roundId: bigint, tokenAmount: bigint) => {
-    console.log("invest Round");
-    const address = await walletClient.getAddresses();
-    if (address.length === 0) return;
-    const { request } = await walletClient.simulateContract({
-      abi: contract.abi,
-      address: contract.address as `0x${string}`,
-      functionName: "investRound",
-      account: address[0],
-      chain: foundry,
-      args: [roundId, tokenAmount],
-    });
-    const hash = await walletClient.writeContract(request);
-    const receipt = await walletClient.waitForTransactionReceipt({
-      hash,
-    });
-    console.log("receipt", receipt);
-    if (receipt.status !== "success") {
-      throw new Error("Transaction failed");
-    }
-    return hash;
-  };
-
+    initialize();
+  }, [
+    fetchAllRoundsDetailPaginated,
+    fetchTotalRounds,
+    pagination.limit,
+    pagination.offset,
+    pagination.sortDirection,
+    pagination.sortField,
+  ]);
   return {
-    contract,
-    getRoundInfo,
-    getRoundListArr,
-    createRound,
-    numberOfRound,
-    roundLists,
-    investRound,
-    ownerWithdrawRound,
+    totalRounds,
+    roundList,
+    investRounds,
+    selectedRound,
+    fundingContractAddress: contract?.address || null,
+    setSelectedRoundId,
+    setPagination,
   };
-  // Your hook logic here
 };
 
 export default useFundingContract;

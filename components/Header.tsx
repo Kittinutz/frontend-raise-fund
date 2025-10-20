@@ -1,4 +1,5 @@
 "use client";
+import { useWallet } from "@/contexts/WalletProvider";
 import { Button } from "./ui/button";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
@@ -16,6 +17,8 @@ export function Header() {
     "/transactions": "transactions",
   };
   const currentPage = mapping[pathName as keyof typeof mapping] || "landing";
+  const { connectWallet, disconnectWallet, isConnected, currentAddress } =
+    useWallet();
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -78,16 +81,26 @@ export function Header() {
           </nav>
 
           {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-4">
-            <Button
-              // onClick={() => onNavigate("rounds")}
-              className="bg-primary hover:bg-primary/90"
-            >
-              Invest Now
-            </Button>
-          </div>
-
-          {/* Mobile Menu Button */}
+          {isConnected ? (
+            <div className="hidden md:flex items-center gap-4">
+              <p>{currentAddress}</p>
+              <Button
+                onClick={() => disconnectWallet()}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Disconnect Wallet
+              </Button>
+            </div>
+          ) : (
+            <div className="hidden md:flex items-center gap-4">
+              <Button
+                onClick={() => connectWallet()}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Connect Wallet
+              </Button>
+            </div>
+          )}
           <button
             className="md:hidden p-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

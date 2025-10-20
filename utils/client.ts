@@ -1,4 +1,10 @@
-import { createPublicClient, createWalletClient, custom, http } from "viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  custom,
+  http,
+  publicActions,
+} from "viem";
 import { foundry } from "viem/chains";
 
 declare global {
@@ -19,9 +25,9 @@ export const createWalletClientInstance = () => {
   if (typeof window === "undefined" || !window.ethereum) {
     return null;
   }
-  
+
   return createWalletClient({
     chain: process.env.PRODUCTION == "true" ? foundry : foundry,
     transport: custom(window.ethereum),
-  });
+  }).extend(publicActions);
 };
