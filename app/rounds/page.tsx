@@ -10,7 +10,7 @@ import { investmentRounds } from "@/lib/mockData";
 import { etherUnits, formatEther, parseEther } from "viem";
 import Link from "next/link";
 
-export default function RoundListPage() {
+export default function RoundListPage({ owner }: { owner: React.ReactNode }) {
   const { totalRounds, roundList, fundingContractAddress, investRounds } =
     useFundingContract();
   const { handleApprove } = useUSDTokenContract();
@@ -102,7 +102,6 @@ export default function RoundListPage() {
             </CardContent>
           </Card>
         </div>
-
         {/* Rounds List */}
         <div className="space-y-6">
           {roundList.map((round) => {

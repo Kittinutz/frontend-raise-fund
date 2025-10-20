@@ -1,5 +1,3 @@
-"use client";
-import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -39,18 +37,16 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useParams } from "next/navigation";
 
-interface RoundDetailPageProps {
-  roundId: string;
-  onNavigate: (page: string, roundId?: string) => void;
-}
+export default async function RoundDetailPage(
+  props: PageProps<"/rounds/[roundId]">
+) {
+  const { roundId } = await props.params;
 
-export default function RoundDetailPage() {
-  const { roundId } = useParams(); // Example round ID, replace with actual prop or state
-  const [tokenAmount, setTokenAmount] = useState<string>("1");
-  const [isAuthorized, setIsAuthorized] = useState(false);
-
+  const setTokenAmount = (value: any) => {};
+  const setIsAuthorized = (value: any) => {};
+  const tokenAmount = "10000";
+  const isAuthorized = false;
   const round = investmentRounds.find((r) => r.id === roundId);
   const cows = cowsByRound[roundId] || [];
   const documents = documentsByRound[roundId] || [];
@@ -67,7 +63,7 @@ export default function RoundDetailPage() {
             <p className="text-gray-600 mb-4">
               The investment round you&apos;re looking for doesn&apos;t exist.
             </p>
-            <Button onClick={() => onNavigate("rounds")}>Back to Rounds</Button>
+            <Button>Back to Rounds</Button>
           </CardContent>
         </Card>
       </div>
@@ -124,7 +120,7 @@ export default function RoundDetailPage() {
         {/* Back Button */}
         <Button
           variant="ghost"
-          onClick={() => onNavigate("rounds")}
+          // onClick={() => onNavigate("rounds")}
           className="mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -251,7 +247,7 @@ export default function RoundDetailPage() {
                       min="1"
                       max={round.tokensRemaining}
                       value={tokenAmount}
-                      onChange={(e) => setTokenAmount(e.target.value)}
+                      // onChange={(e) => setTokenAmount(e.target.value)}
                       disabled={round.status !== "Open"}
                       className="mt-2"
                     />
@@ -277,7 +273,7 @@ export default function RoundDetailPage() {
 
                   <div className="space-y-3">
                     <Button
-                      onClick={handleAuthorize}
+                      // onClick={handleAuthorize}
                       disabled={
                         round.status !== "Open" ||
                         isAuthorized ||
@@ -298,7 +294,7 @@ export default function RoundDetailPage() {
                     </Button>
 
                     <Button
-                      onClick={handleInvest}
+                      // onClick={handleInvest}
                       disabled={
                         round.status !== "Open" ||
                         !isAuthorized ||

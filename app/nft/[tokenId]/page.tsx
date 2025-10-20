@@ -1,4 +1,3 @@
-"use client";
 import {
   Card,
   CardContent,
@@ -23,10 +22,11 @@ import {
   XCircle,
 } from "lucide-react";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
-import { useParams } from "next/navigation";
 
-export default function NFTDetailPage() {
-  const { tokenId } = useParams();
+export default async function NFTDetailPage(
+  props: PageProps<"/nft/[tokenId]">
+) {
+  const { tokenId } = await props.params;
   const nft = nfts.find((n) => n.tokenId === tokenId);
   const round = nft ? investmentRounds.find((r) => r.id === nft.roundId) : null;
 
@@ -57,10 +57,6 @@ export default function NFTDetailPage() {
       return <Badge className="bg-red-500">Locked</Badge>;
     }
     return <Badge className="bg-green-500">Active</Badge>;
-  };
-
-  const formatWalletAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   return (
