@@ -1,6 +1,7 @@
 import { useWallet } from "@/contexts/WalletProvider";
 import getClientConnectUsdContract from "@/contract/usdtContract";
-import { useCallback, useEffect, useState } from "react";
+import { publicClient } from "@/utils/client";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { GetContractReturnType, PublicActions, WalletClient } from "viem";
 import { foundry } from "viem/chains";
 // Import Contract type if available
@@ -22,40 +23,32 @@ import { foundry } from "viem/chains";
  * - Actions: mintUSDT, handleApprove (auto-refresh balance)
  * - Utilities: getBalanceOf, updateMyTokenBalance, refreshBalanceAfterAction
  */
-const useUSDTokenContract = () => {
-  const { walletClient } = useWallet();
-
-  const [usdTokenContract, setTokenContract] =
-    useState<GetContractReturnType>();
+const useUSDTokenContract = (walletClient: WalletClient) => {
   const [usdtBalance, setUsdtBalance] = useState<bigint | null>(null);
   const [usdtOwner, setUsdtOwner] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    console.log("walletClient", walletClient);
-    if (!walletClient) return;
-    const contract = getClientConnectUsdContract(walletClient);
-    setTokenContract(contract);
+  const usdTokenContract = useMemo(() => {
+    if (!walletClient) return null;
+    return getClientConnectUsdContract(walletClient);
   }, [walletClient]);
+
+  const publicUsdtContract = useMemo(() => {
+    return getClientConnectUsdContract(publicClient!);
+  }, []);
 
   const getBalanceOf = useCallback(
     async (address: `0x${string}`) => {
-      if (!usdTokenContract) return null;
+      if (!usdTokenContract && address) return null;
       try {
-        const balance = await walletClient.readContract({
-          abi: usdTokenContract.abi,
-          address: usdTokenContract.address,
-          functionName: "balanceOf",
-          args: [address],
-        });
+        const balance = await publicUsdtContract.read.balanceOf([address]);
         return balance as bigint;
       } catch (error) {
         console.error("Error fetching balance:", error);
         return null;
       }
     },
-    [usdTokenContract, walletClient]
+    [publicUsdtContract.read, usdTokenContract]
   );
 
   const getMyTokenBalance = async () => {
@@ -149,11 +142,6 @@ const useUSDTokenContract = () => {
     tokenAmount: bigint,
     pricePerToken: bigint
   ) => {
-    console.log({
-      spender,
-      tokenAmount,
-      pricePerToken,
-    });
     if (!usdTokenContract) return;
     setIsLoading(true);
     setError(null);
@@ -204,12 +192,10 @@ const useUSDTokenContract = () => {
   ) => {
     if (!usdTokenContract) return null;
     try {
-      const allowance = await walletClient.readContract({
-        abi: usdTokenContract.abi,
-        address: usdTokenContract.address,
-        functionName: "allowance",
-        args: [owner, spender],
-      });
+      const allowance = await publicUsdtContract.read.allowance([
+        owner,
+        spender,
+      ]);
       return allowance as bigint;
     } catch (error) {
       console.error("Error fetching allowance:", error);
@@ -219,6 +205,7 @@ const useUSDTokenContract = () => {
 
   useEffect(() => {
     const fetchCurrentWalletUSDTBalance = async () => {
+      console.log(!usdTokenContract);
       if (!usdTokenContract) return;
       try {
         const address = await walletClient.getAddresses();
@@ -226,12 +213,12 @@ const useUSDTokenContract = () => {
         const balance = await getBalanceOf(address[0]);
         setUsdtOwner("owner");
         setUsdtBalance(balance);
-        console.log("Fetched USDT balance:", balance);
       } catch (error) {
         console.error("Error fetching initial balance:", error);
       }
     };
     fetchCurrentWalletUSDTBalance();
+    console.log("here");
   }, [usdTokenContract, walletClient, getBalanceOf]);
 
   return {

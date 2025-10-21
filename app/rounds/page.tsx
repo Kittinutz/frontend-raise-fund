@@ -6,14 +6,15 @@ import { Progress } from "@/components/ui/progress";
 import { TrendingUp, Calendar, Coins, DollarSign } from "lucide-react";
 import useFundingContract from "@/hooks/useFundingContract";
 import useUSDTokenContract from "@/hooks/useUSDTokenContract";
-import { investmentRounds } from "@/lib/mockData";
-import { etherUnits, formatEther, parseEther } from "viem";
+import { formatEther } from "viem";
 import Link from "next/link";
+import { useWallet } from "@/contexts/WalletProvider";
 
 export default function RoundListPage({ owner }: { owner: React.ReactNode }) {
   const { totalRounds, roundList, fundingContractAddress, investRounds } =
     useFundingContract();
-  const { handleApprove } = useUSDTokenContract();
+  const { walletClient } = useWallet();
+  const { handleApprove } = useUSDTokenContract(walletClient);
   const getStatusColor = (status: string) => {
     switch (status) {
       case "Open":
@@ -28,11 +29,11 @@ export default function RoundListPage({ owner }: { owner: React.ReactNode }) {
   };
   console.log("roundList", roundList);
   const handleInvestment =
-    (roundId: bigint, roundTokenPrice: bigint) => async () => {
+    (roundId: bigint, investTokenAmount: bigint) => async () => {
       await handleApprove(
         fundingContractAddress as `0x${string}`,
         10n,
-        roundTokenPrice
+        roundList[Number(roundId)].tokenPrice
       );
       await investRounds(roundId, 10n);
     };
@@ -206,6 +207,12 @@ export default function RoundListPage({ owner }: { owner: React.ReactNode }) {
                       View Round Detail
                     </Button>
                   </Link>
+                  <Button
+                    onClick={handleInvestment(0n, 10n)}
+                    className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                  >
+                    Invest Round Detail
+                  </Button>
                 </CardContent>
               </Card>
             );

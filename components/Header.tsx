@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { formatEther } from "viem";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -17,8 +18,13 @@ export function Header() {
     "/transactions": "transactions",
   };
   const currentPage = mapping[pathName as keyof typeof mapping] || "landing";
-  const { connectWallet, disconnectWallet, isConnected, currentAddress } =
-    useWallet();
+  const {
+    connectWallet,
+    disconnectWallet,
+    isConnected,
+    currentAddress,
+    usdtBalance,
+  } = useWallet();
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -84,6 +90,7 @@ export function Header() {
           {isConnected ? (
             <div className="hidden md:flex items-center gap-4">
               <p>{currentAddress}</p>
+              <p>USDT Balance: {usdtBalance && formatEther(usdtBalance)}</p>
               <Button
                 onClick={() => disconnectWallet()}
                 className="bg-primary hover:bg-primary/90"

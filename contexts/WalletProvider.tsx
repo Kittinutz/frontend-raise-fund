@@ -11,6 +11,7 @@ import React, {
 import { createWalletClient, custom, publicActions, WalletClient } from "viem";
 import { foundry } from "viem/chains";
 import { createWalletClientInstance } from "@/utils/client";
+import useUSDTokenContract from "@/hooks/useUSDTokenContract";
 
 // Add a type declaration for window.ethereum
 declare global {
@@ -28,6 +29,8 @@ interface WalletContextType {
   connectWallet: () => Promise<void>;
   disconnectWallet: () => Promise<void>;
   setCurrentAddress: (address: string | undefined) => void;
+  usdtAllowance: bigint | null;
+  usdtBalance: bigint | null;
 }
 
 interface WalletProviderProps {
@@ -41,7 +44,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [walletClient, setWalletClient] = useState<WalletClient | null>(null);
-
+  const { usdtBalance, usdtAllowance } = useUSDTokenContract(walletClient);
   // Initialize wallet client
   const initializeWalletClient = useCallback(() => {
     if (typeof window === "undefined" || !window.ethereum) return null;
@@ -228,6 +231,8 @@ export function WalletProvider({ children }: WalletProviderProps) {
     connectWallet,
     disconnectWallet,
     setCurrentAddress,
+    usdtAllowance,
+    usdtBalance,
   };
 
   return (
