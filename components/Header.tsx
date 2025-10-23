@@ -1,7 +1,7 @@
 "use client";
 import { useWallet } from "@/contexts/WalletProvider";
 import { Button } from "./ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, Wallet, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -25,6 +25,9 @@ export function Header() {
     currentAddress,
     usdtBalance,
   } = useWallet();
+  const displayWallet = currentAddress
+    ? `${currentAddress.slice(0, 6)}...${currentAddress.slice(-4)}`
+    : "";
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -89,13 +92,17 @@ export function Header() {
           {/* Desktop CTA */}
           {isConnected ? (
             <div className="hidden md:flex items-center gap-4">
-              <p>{currentAddress}</p>
-              <p>USDT Balance: {usdtBalance && formatEther(usdtBalance)}</p>
+              <p>USDT:</p>
+              <p className="font-bold">
+                {usdtBalance &&
+                  `$ ${Number(formatEther(usdtBalance)).toLocaleString()}`}
+              </p>
               <Button
                 onClick={() => disconnectWallet()}
-                className="bg-primary hover:bg-primary/90"
+                className="bg-gray-200 text-black hover:bg-gray-400"
               >
-                Disconnect Wallet
+                <Wallet />
+                <p>{displayWallet}</p>
               </Button>
             </div>
           ) : (
@@ -186,6 +193,27 @@ export function Header() {
                 Invest Now
               </Button>
             </div>
+            {isConnected ? (
+              <div className="px-4 pt-2">
+                <p>{currentAddress}</p>
+                <p>USDT Balance: {usdtBalance && formatEther(usdtBalance)}</p>
+                <Button
+                  onClick={() => disconnectWallet()}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Disconnect Wallet
+                </Button>
+              </div>
+            ) : (
+              <div className="px-4 pt-2">
+                <Button
+                  onClick={() => connectWallet()}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  Connect Wallet
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </div>

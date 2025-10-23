@@ -5,37 +5,26 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, Calendar, Coins, DollarSign } from "lucide-react";
 import useFundingContract from "@/hooks/useFundingContract";
-import useUSDTokenContract from "@/hooks/useUSDTokenContract";
 import { formatEther } from "viem";
 import Link from "next/link";
-import { useWallet } from "@/contexts/WalletProvider";
+import { Status } from "@/types/fundingContract";
 
-export default function RoundListPage({ owner }: { owner: React.ReactNode }) {
-  const { totalRounds, roundList, fundingContractAddress, investRounds } =
-    useFundingContract();
-  const { walletClient } = useWallet();
-  const { handleApprove } = useUSDTokenContract(walletClient);
-  const getStatusColor = (status: string) => {
+export default function RoundListPage() {
+  const { totalRounds, roundList } = useFundingContract();
+
+  const getStatusColor = (status: Status) => {
     switch (status) {
-      case "Open":
+      case Status.OPEN:
         return "bg-green-500";
-      case "Closed":
+      case Status.CLOSED:
         return "bg-gray-500";
-      case "Dividends Paid":
+      case Status.DIVIDEND_PAID:
         return "bg-primary";
       default:
         return "bg-gray-500";
     }
   };
-  const handleInvestment =
-    (roundId: bigint, investTokenAmount: bigint) => async () => {
-      await handleApprove(
-        fundingContractAddress as `0x${string}`,
-        10n,
-        roundList[Number(roundId)].tokenPrice
-      );
-      await investRounds(roundId, 10n);
-    };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -134,11 +123,7 @@ export default function RoundListPage({ owner }: { owner: React.ReactNode }) {
                         </span>
                       </div>
                     </div>
-                    <Badge
-                      className={getStatusColor(
-                        round.isActive ? "Open" : "Closed"
-                      )}
-                    >
+                    <Badge className={getStatusColor(round.status)}>
                       {round.isActive ? "Open" : "Closed"}
                     </Badge>
                   </div>
@@ -206,12 +191,6 @@ export default function RoundListPage({ owner }: { owner: React.ReactNode }) {
                       View Round Detail
                     </Button>
                   </Link>
-                  <Button
-                    onClick={handleInvestment(0n, 10n)}
-                    className="w-full sm:w-auto bg-primary hover:bg-primary/90"
-                  >
-                    Invest Round Detail
-                  </Button>
                 </CardContent>
               </Card>
             );

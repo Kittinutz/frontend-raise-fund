@@ -51,7 +51,9 @@ const useFundingContract = () => {
             chain: foundry,
           }
         );
-        await publicClient.waitForTransactionReceipt({ hash });
+        if (hash) {
+          await publicClient.waitForTransactionReceipt({ hash });
+        }
 
         const [roundListData] = await fetchAllRoundsDetailPaginated({
           offset: BigInt(pagination.offset),

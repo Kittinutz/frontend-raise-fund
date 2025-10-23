@@ -86,10 +86,11 @@ export default function RoundDetailInvestment({
       (roundDetail?.tokensSold ?? BigInt(0))
   ).toLocaleString();
 
-  const investPercentage =
+  const investPercentage = Math.floor(
     (Number(roundDetail?.tokensSold) /
       Number(roundDetail?.totalTokenOpenInvestment)) *
-    100;
+      100
+  );
   return (
     <>
       <Card className="mb-8 border-2 border-card-header/20">

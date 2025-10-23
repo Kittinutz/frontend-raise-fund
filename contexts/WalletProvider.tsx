@@ -29,7 +29,6 @@ interface WalletContextType {
   connectWallet: () => Promise<void>;
   disconnectWallet: () => Promise<void>;
   setCurrentAddress: (address: string | undefined) => void;
-  usdtAllowance: bigint | null;
   usdtBalance: bigint | null;
 }
 
@@ -44,7 +43,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [walletClient, setWalletClient] = useState<WalletClient | null>(null);
-  const { usdtBalance, usdtAllowance } = useUSDTokenContract(walletClient);
+  const { usdtBalance } = useUSDTokenContract(walletClient!);
   // Initialize wallet client
   const initializeWalletClient = useCallback(() => {
     if (typeof window === "undefined" || !window.ethereum) return null;
@@ -91,6 +90,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
         localStorage.setItem("walletConnected", "true");
         localStorage.setItem("walletAddress", accounts[0]);
       }
+      await walletClient?.addChain({ chain: foundry });
     } catch (err: any) {
       console.error("Failed to connect wallet:", err);
       setError(err.message || "Failed to connect wallet");
@@ -231,7 +231,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     connectWallet,
     disconnectWallet,
     setCurrentAddress,
-    usdtAllowance,
+
     usdtBalance,
   };
 

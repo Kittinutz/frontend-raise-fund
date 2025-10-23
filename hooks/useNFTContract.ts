@@ -6,30 +6,25 @@ import { GetContractReturnType } from "viem";
 
 const useFundingTokenContract = () => {
   const { walletClient } = useWallet();
-  const [tokenContract, setTokenContract] = useState<GetContractReturnType>();
   const [balance, setBalance] = useState<bigint | null>(null);
   const [usdtOwner, setUsdtOwner] = useState<string | null>(null);
-  useEffect(() => {
-    if (!walletClient) return;
-    const contract = getClientConnectTokenContract(walletClient);
-    setTokenContract(contract);
-  }, [walletClient]);
+  const tokenContract = getClientConnectTokenContract(walletClient!);
 
   const getBalanceOff = async (address: `0x${string}`) => {
-    const balance = await tokenContract?.read.balanceOf([address]);
+    const balance = await tokenContract.read.balanceOf([address]);
     return balance;
   };
   const getMyTokenBalance = async () => {
-    const address = await walletClient.getAddresses();
+    const address = await walletClient!.getAddresses();
     if (address.length === 0) return 0;
-    const balance = await tokenContract?.read.balanceOf([address[0]]);
+    const balance = await tokenContract?.read!.balanceOf([address[0]]);
     return balance;
   };
 
   useEffect(() => {
     const fetchCurrentWalletTokenBalance = async () => {
       if (!tokenContract) return;
-      const address = await walletClient.getAddresses();
+      const address = await walletClient!.getAddresses();
       if (address.length === 0) return;
       const balance = await tokenContract.read.balanceOf([address[0]]);
       setUsdtOwner("owner");

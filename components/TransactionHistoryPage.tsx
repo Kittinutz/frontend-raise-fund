@@ -1,8 +1,13 @@
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import {
   Select,
@@ -26,38 +31,44 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./ui/dialog";
-import { transactions, investmentRounds, nfts } from "../lib/mockData";
+import { transactions, investmentRounds } from "../lib/mockData";
 import { Filter, Receipt, ExternalLink, Calendar, Coins } from "lucide-react";
 
 interface TransactionHistoryPageProps {
   onNavigate: (page: string, nftId?: string) => void;
 }
 
-export function TransactionHistoryPage({ onNavigate }: TransactionHistoryPageProps) {
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterRound, setFilterRound] = useState<string>('all');
-  const [selectedTransaction, setSelectedTransaction] = useState<string | null>(null);
+export function TransactionHistoryPage({
+  onNavigate,
+}: TransactionHistoryPageProps) {
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterRound, setFilterRound] = useState<string>("all");
+  const [selectedTransaction, setSelectedTransaction] = useState<string | null>(
+    null
+  );
 
   const filteredTransactions = transactions.filter((txn) => {
-    if (filterStatus !== 'all' && txn.status !== filterStatus) return false;
-    if (filterRound !== 'all' && txn.roundId !== filterRound) return false;
+    if (filterStatus !== "all" && txn.status !== filterStatus) return false;
+    if (filterRound !== "all" && txn.roundId !== filterRound) return false;
     return true;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Completed':
-        return 'bg-green-500';
-      case 'Pending':
-        return 'bg-accent';
-      case 'Cancelled':
-        return 'bg-red-500';
+      case "Completed":
+        return "bg-green-500";
+      case "Pending":
+        return "bg-accent";
+      case "Cancelled":
+        return "bg-red-500";
       default:
-        return 'bg-gray-500';
+        return "bg-gray-500";
     }
   };
 
-  const selectedTxnData = transactions.find((t) => t.id === selectedTransaction);
+  const selectedTxnData = transactions.find(
+    (t) => t.id === selectedTransaction
+  );
   const selectedRound = selectedTxnData
     ? investmentRounds.find((r) => r.id === selectedTxnData.roundId)
     : null;
@@ -100,7 +111,7 @@ export function TransactionHistoryPage({ onNavigate }: TransactionHistoryPagePro
             </CardHeader>
             <CardContent>
               <p className="text-3xl text-green-700">
-                {transactions.filter((t) => t.status === 'Completed').length}
+                {transactions.filter((t) => t.status === "Completed").length}
               </p>
             </CardContent>
           </Card>
@@ -118,7 +129,7 @@ export function TransactionHistoryPage({ onNavigate }: TransactionHistoryPagePro
               <p className="text-3xl text-accent">
                 $
                 {transactions
-                  .filter((t) => t.status === 'Completed')
+                  .filter((t) => t.status === "Completed")
                   .reduce((sum, t) => sum + t.usdtAmount, 0)
                   .toLocaleString()}
               </p>
@@ -172,8 +183,8 @@ export function TransactionHistoryPage({ onNavigate }: TransactionHistoryPagePro
                 <Button
                   variant="outline"
                   onClick={() => {
-                    setFilterStatus('all');
-                    setFilterRound('all');
+                    setFilterStatus("all");
+                    setFilterRound("all");
                   }}
                   className="w-full"
                 >
@@ -210,25 +221,37 @@ export function TransactionHistoryPage({ onNavigate }: TransactionHistoryPagePro
                   </TableHeader>
                   <TableBody>
                     {filteredTransactions.map((txn) => {
-                      const round = investmentRounds.find((r) => r.id === txn.roundId);
+                      const round = investmentRounds.find(
+                        (r) => r.id === txn.roundId
+                      );
                       return (
                         <TableRow key={txn.id}>
                           <TableCell className="font-mono">{txn.id}</TableCell>
                           <TableCell>
                             <div className="text-sm">
-                              <div>{new Date(txn.purchaseDate).toLocaleDateString()}</div>
-                              <div className="text-gray-500">{txn.purchaseTime}</div>
+                              <div>
+                                {new Date(
+                                  txn.purchaseDate
+                                ).toLocaleDateString()}
+                              </div>
+                              <div className="text-gray-500">
+                                {txn.purchaseTime}
+                              </div>
                             </div>
                           </TableCell>
-                          <TableCell>{round?.name || 'N/A'}</TableCell>
+                          <TableCell>{round?.name || "N/A"}</TableCell>
                           <TableCell>{txn.tokenAmount}</TableCell>
-                          <TableCell>${txn.usdtAmount.toLocaleString()}</TableCell>
+                          <TableCell>
+                            ${txn.usdtAmount.toLocaleString()}
+                          </TableCell>
                           <TableCell>
                             {txn.nftIds.length > 0 ? (
                               <Button
                                 size="sm"
                                 variant="link"
-                                onClick={() => onNavigate('nft-detail', txn.nftIds[0])}
+                                onClick={() =>
+                                  onNavigate("nft-detail", txn.nftIds[0])
+                                }
                                 className="p-0 h-auto text-primary"
                               >
                                 {txn.nftIds.length} NFT(s)
@@ -268,7 +291,10 @@ export function TransactionHistoryPage({ onNavigate }: TransactionHistoryPagePro
       </div>
 
       {/* Transaction Detail Dialog */}
-      <Dialog open={!!selectedTransaction} onOpenChange={() => setSelectedTransaction(null)}>
+      <Dialog
+        open={!!selectedTransaction}
+        onOpenChange={() => setSelectedTransaction(null)}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Transaction Details</DialogTitle>
@@ -292,7 +318,11 @@ export function TransactionHistoryPage({ onNavigate }: TransactionHistoryPagePro
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Purchase Date</p>
-                  <p>{new Date(selectedTxnData.purchaseDate).toLocaleDateString()}</p>
+                  <p>
+                    {new Date(
+                      selectedTxnData.purchaseDate
+                    ).toLocaleDateString()}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Purchase Time</p>
@@ -300,19 +330,25 @@ export function TransactionHistoryPage({ onNavigate }: TransactionHistoryPagePro
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Round</p>
-                  <p>{selectedRound?.name || 'N/A'}</p>
+                  <p>{selectedRound?.name || "N/A"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Token Amount</p>
-                  <p className="text-primary">{selectedTxnData.tokenAmount} tokens</p>
+                  <p className="text-primary">
+                    {selectedTxnData.tokenAmount} tokens
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-1">USDT Amount</p>
-                  <p className="text-primary">${selectedTxnData.usdtAmount.toLocaleString()}</p>
+                  <p className="text-primary">
+                    ${selectedTxnData.usdtAmount.toLocaleString()}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 mb-1">NFTs Received</p>
-                  <p className="text-primary">{selectedTxnData.nftIds.length} NFT(s)</p>
+                  <p className="text-primary">
+                    {selectedTxnData.nftIds.length} NFT(s)
+                  </p>
                 </div>
               </div>
 
@@ -327,7 +363,7 @@ export function TransactionHistoryPage({ onNavigate }: TransactionHistoryPagePro
                         variant="outline"
                         onClick={() => {
                           setSelectedTransaction(null);
-                          onNavigate('nft-detail', nftId);
+                          onNavigate("nft-detail", nftId);
                         }}
                         className="font-mono"
                       >
@@ -355,7 +391,7 @@ export function TransactionHistoryPage({ onNavigate }: TransactionHistoryPagePro
                 <Button
                   className="flex-1 bg-primary hover:bg-primary/90"
                   onClick={() => {
-                    window.open('https://etherscan.io/', '_blank');
+                    window.open("https://etherscan.io/", "_blank");
                   }}
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />

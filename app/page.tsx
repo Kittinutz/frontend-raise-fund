@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { investmentRounds } from "../lib/mockData";
 import ImageWithFallback from "@/components/figma/ImageWithFallback";
-import Footer from "@/components/ui/footer";
 import Link from "next/link";
 
 export default function LandingPage() {

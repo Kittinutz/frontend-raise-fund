@@ -106,16 +106,14 @@ const useUSDTokenContract = (walletClient: WalletClient) => {
     try {
       const address = await walletClient.getAddresses();
       console.log("---->", address);
-      const { request } = await walletClient.simulateContract({
-        abi: usdTokenContract.abi,
-        address: process.env.NEXT_PUBLIC_USDT_CONTRACT_ADDRESS as `0x${string}`,
-        functionName: "mint",
-        chain: foundry,
-        account: address[0],
-        args: [address[0], amount * BigInt(10) ** BigInt(18)],
-      });
-      const hash = await walletClient.writeContract(request);
-      const receipt = await walletClient.waitForTransactionReceipt({
+      const hash = await usdTokenContract.write.mint(
+        [address[0], amount * BigInt(10) ** BigInt(18)],
+        {
+          chain: foundry,
+          account: address[0],
+        }
+      );
+      const receipt = await publicClient.waitForTransactionReceipt({
         hash,
       });
       console.log("receipt", receipt);
@@ -148,20 +146,13 @@ const useUSDTokenContract = (walletClient: WalletClient) => {
 
     try {
       const address = await walletClient.getAddresses();
-      console.log([`${spender}`, tokenAmount, pricePerToken]);
-      const { request } = await walletClient.simulateContract({
-        abi: usdTokenContract.abi,
-        address: usdTokenContract.address,
-        functionName: "approve",
-        chain: foundry,
-        account: address[0],
-        args: [
-          `${spender}`,
-          tokenAmount * pricePerToken * BigInt(10) ** BigInt(18),
-        ],
-      });
-
-      const hash = await walletClient.writeContract(request);
+      const hash = await usdTokenContract.write.approve(
+        [`${spender}`, tokenAmount * pricePerToken * BigInt(10) ** BigInt(18)],
+        {
+          chain: foundry,
+          account: address[0],
+        }
+      );
       const receipt = await publicClient.waitForTransactionReceipt({
         hash,
       });
@@ -182,23 +173,6 @@ const useUSDTokenContract = (walletClient: WalletClient) => {
       throw error;
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const usdtAllowance = async (
-    owner: `0x${string}`,
-    spender: `0x${string}`
-  ) => {
-    if (!usdTokenContract) return null;
-    try {
-      const allowance = await publicUsdtContract.read.allowance([
-        owner,
-        spender,
-      ]);
-      return allowance as bigint;
-    } catch (error) {
-      console.error("Error fetching allowance:", error);
-      return null;
     }
   };
 
@@ -237,8 +211,6 @@ const useUSDTokenContract = (walletClient: WalletClient) => {
     // Read-only functions
     getBalanceOf,
     getMyTokenBalance,
-    usdtAllowance,
-
     // Manual refresh functions
     updateMyTokenBalance,
     refreshBalanceAfterAction,

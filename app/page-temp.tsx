@@ -1,6 +1,4 @@
 "use client";
-import PreviewCurrentProtocol from "@/components/PreviewCurrentProtocol";
-import FundingRoundsPreview from "@/components/FundingRoundsPreview";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -44,11 +42,11 @@ export default function Home() {
       <section className="">
         <div className="relative -top-24 container max-w-6xl mx-auto px-4 py-8 space-y-4 z-10 flex flex-col  justify-center h-full">
           <div className="abosolute top-0 left-0 w-full h-full  bg-cover bg-center -z-10">
-            <PreviewCurrentProtocol
+            {/* <PreviewCurrentProtocol
               currentCapitalReserve={1000000}
               apy={6}
               totalInvestor={6000}
-            />
+            /> */}
           </div>
         </div>
       </section>
@@ -66,7 +64,7 @@ export default function Home() {
               protocol.
             </p>
           </div>
-          <FundingRoundsPreview />
+          {/* <FundingRoundsPreview /> */}
           <div className="text-center mt-8">
             <Link href="/rounds">
               <button className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">

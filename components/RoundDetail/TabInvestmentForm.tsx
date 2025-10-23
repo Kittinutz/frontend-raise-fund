@@ -18,17 +18,14 @@ import {
 } from "../ui/tooltip";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { investmentRounds } from "@/lib/mockData";
 import { toast } from "sonner";
 import { Separator } from "../ui/separator";
-import { fetchRoundByID } from "@/services/web3/fundingContractService";
 import { useWallet } from "@/contexts/WalletProvider";
 import { InvestmentRound, Status } from "@/types/fundingContract";
 import { useCallback, useMemo, useState } from "react";
 import { formatEther } from "viem";
 import useUSDTokenContract from "@/hooks/useUSDTokenContract";
 import { fetchAllowance } from "@/services/web3/usdtService";
-import { publicClient } from "@/utils/client";
 import useFundingContract from "@/hooks/useFundingContract";
 
 export default function TabInvestmentForm({
@@ -41,39 +38,39 @@ export default function TabInvestmentForm({
   const [tokenAmount, setTokenAmount] = useState("0");
   const { isConnected, connectWallet, currentAddress, walletClient } =
     useWallet();
-  const { handleApprove } = useUSDTokenContract(walletClient);
-  const { investRounds } = useFundingContract(walletClient);
+  const { handleApprove } = useUSDTokenContract(walletClient!);
+  const { investRounds } = useFundingContract();
   const [allowance, setAllowance] = useState<bigint | undefined>();
   const isAuthorized = false;
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "OPEN":
-        return "bg-green-500";
-      case "CLOSED":
-        return "bg-gray-500";
-      case "DIVIDED_PAID":
-        return "bg-primary";
-      case "COMPLETED":
-        return "bg-green-500";
-      case "WITHDRAW_FUND":
-        return "bg-yellow-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
+  // const getStatusColor = (status: string) => {
+  //   switch (status) {
+  //     case "OPEN":
+  //       return "bg-green-500";
+  //     case "CLOSED":
+  //       return "bg-gray-500";
+  //     case "DIVIDED_PAID":
+  //       return "bg-primary";
+  //     case "COMPLETED":
+  //       return "bg-green-500";
+  //     case "WITHDRAW_FUND":
+  //       return "bg-yellow-500";
+  //     default:
+  //       return "bg-gray-500";
+  //   }
+  // };
   const calculatedUSDT =
     parseFloat(tokenAmount || "0") *
-    Number(formatEther(roundDetail.tokenPrice));
+    Number(formatEther(roundDetail!.tokenPrice));
 
   const tokenRemaining =
-    Number(roundDetail.totalTokenOpenInvestment) -
-    Number(roundDetail.tokensSold);
+    Number(roundDetail!.totalTokenOpenInvestment) -
+    Number(roundDetail!.tokensSold);
 
   const handleAuthorize = useCallback(async () => {
     const recipient = await handleApprove(
       process.env.NEXT_PUBLIC_FUNDRAISING_CONTRACT_ADDRESS as `0x${string}`,
       tokenAmount ? BigInt(tokenAmount) : 0n,
-      BigInt(formatEther(roundDetail.tokenPrice))
+      BigInt(formatEther(roundDetail!.tokenPrice))
     );
     console.log({
       recipient,
@@ -88,20 +85,20 @@ export default function TabInvestmentForm({
     toast.success(
       "USDT authorization successful! You can now confirm your investment."
     );
-  }, [currentAddress, handleApprove, roundDetail.tokenPrice, tokenAmount]);
+  }, [currentAddress, handleApprove, roundDetail, tokenAmount]);
   const handleInvest = async () => {
-    await investRounds(roundDetail.roundId, BigInt(tokenAmount));
+    await investRounds(roundDetail!.roundId, BigInt(tokenAmount));
     setTokenAmount("0");
     setAllowance(undefined);
-    await updateRoundDetail(roundDetail.roundId);
+    await updateRoundDetail(roundDetail!.roundId);
     toast.success(
       `Successfully invested ${tokenAmount} tokens (${calculatedUSDT.toLocaleString()} USDT)!`
     );
   };
 
   const isAllowed = useMemo(() => {
-    return allowance == BigInt(tokenAmount) * BigInt(roundDetail.tokenPrice);
-  }, [allowance, roundDetail.tokenPrice, tokenAmount]);
+    return allowance == BigInt(tokenAmount) * BigInt(roundDetail!.tokenPrice);
+  }, [allowance, roundDetail, tokenAmount]);
 
   if (!roundDetail) {
     return (
