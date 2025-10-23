@@ -282,6 +282,31 @@ const crowdFundingABI = [
     inputs: [
       {
         indexed: true,
+        internalType: "uint256",
+        name: "roundId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "enum FundRaisingContractNFT.Status",
+        name: "oldStatus",
+        type: "uint8",
+      },
+      {
+        indexed: false,
+        internalType: "enum FundRaisingContractNFT.Status",
+        name: "newStatus",
+        type: "uint8",
+      },
+    ],
+    name: "RoundStatusUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
         internalType: "address",
         name: "oldToken",
         type: "address",
@@ -476,6 +501,19 @@ const crowdFundingABI = [
   },
   {
     inputs: [],
+    name: "currentRoundId",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "dzNFT",
     outputs: [
       {
@@ -631,6 +669,11 @@ const crowdFundingABI = [
             name: "createdAt",
             type: "uint256",
           },
+          {
+            internalType: "enum FundRaisingContractNFT.Status",
+            name: "status",
+            type: "uint8",
+          },
         ],
         internalType: "struct FundRaisingContractNFT.InvestmentRound[]",
         name: "rounds",
@@ -731,6 +774,11 @@ const crowdFundingABI = [
             internalType: "uint256",
             name: "createdAt",
             type: "uint256",
+          },
+          {
+            internalType: "enum FundRaisingContractNFT.Status",
+            name: "status",
+            type: "uint8",
           },
         ],
         internalType: "struct FundRaisingContractNFT.InvestmentRound[]",
@@ -969,7 +1017,7 @@ const crowdFundingABI = [
         type: "uint256",
       },
     ],
-    name: "getCalculationRewardAmount",
+    name: "getCalculationDividendAmount",
     outputs: [
       {
         internalType: "uint256",
@@ -1108,6 +1156,11 @@ const crowdFundingABI = [
             name: "createdAt",
             type: "uint256",
           },
+          {
+            internalType: "enum FundRaisingContractNFT.Status",
+            name: "status",
+            type: "uint8",
+          },
         ],
         internalType: "struct FundRaisingContractNFT.InvestmentRound",
         name: "",
@@ -1183,6 +1236,11 @@ const crowdFundingABI = [
             internalType: "uint256",
             name: "createdAt",
             type: "uint256",
+          },
+          {
+            internalType: "enum FundRaisingContractNFT.Status",
+            name: "status",
+            type: "uint8",
           },
         ],
         internalType: "struct FundRaisingContractNFT.InvestmentRound",
@@ -1291,6 +1349,25 @@ const crowdFundingABI = [
         internalType: "uint256",
         name: "fullRedemptions",
         type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "roundId",
+        type: "uint256",
+      },
+    ],
+    name: "getRoundStatus",
+    outputs: [
+      {
+        internalType: "enum FundRaisingContractNFT.Status",
+        name: "status",
+        type: "uint8",
       },
     ],
     stateMutability: "view",
@@ -1628,6 +1705,11 @@ const crowdFundingABI = [
         name: "createdAt",
         type: "uint256",
       },
+      {
+        internalType: "enum FundRaisingContractNFT.Status",
+        name: "status",
+        type: "uint8",
+      },
     ],
     stateMutability: "view",
     type: "function",
@@ -1807,6 +1889,24 @@ const crowdFundingABI = [
   {
     inputs: [],
     name: "unpause",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "roundId",
+        type: "uint256",
+      },
+      {
+        internalType: "enum FundRaisingContractNFT.Status",
+        name: "status",
+        type: "uint8",
+      },
+    ],
+    name: "updateStatus",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

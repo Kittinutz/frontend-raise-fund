@@ -27,7 +27,6 @@ export default function RoundListPage({ owner }: { owner: React.ReactNode }) {
         return "bg-gray-500";
     }
   };
-  console.log("roundList", roundList);
   const handleInvestment =
     (roundId: bigint, investTokenAmount: bigint) => async () => {
       await handleApprove(
@@ -161,8 +160,8 @@ export default function RoundListPage({ owner }: { owner: React.ReactNode }) {
                       </p>
                       <p className="text-xl text-primary">
                         $
-                        {formatEther(
-                          round.tokensSold * round.tokenPrice
+                        {Number(
+                          formatEther(round.tokensSold * round.tokenPrice)
                         ).toLocaleString()}
                       </p>
                     </div>

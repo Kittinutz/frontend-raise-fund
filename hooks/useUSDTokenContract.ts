@@ -148,7 +148,7 @@ const useUSDTokenContract = (walletClient: WalletClient) => {
 
     try {
       const address = await walletClient.getAddresses();
-
+      console.log([`${spender}`, tokenAmount, pricePerToken]);
       const { request } = await walletClient.simulateContract({
         abi: usdTokenContract.abi,
         address: usdTokenContract.address,
@@ -162,11 +162,10 @@ const useUSDTokenContract = (walletClient: WalletClient) => {
       });
 
       const hash = await walletClient.writeContract(request);
-      const receipt = await walletClient.waitForTransactionReceipt({
+      const receipt = await publicClient.waitForTransactionReceipt({
         hash,
       });
 
-      console.log("receipt", receipt);
       if (receipt.status !== "success") {
         throw new Error("Transaction failed");
       }
@@ -174,7 +173,7 @@ const useUSDTokenContract = (walletClient: WalletClient) => {
       // Auto-refresh balance after successful approval
       await refreshBalanceAfterAction();
 
-      return hash;
+      return receipt;
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Error approving USDT";
