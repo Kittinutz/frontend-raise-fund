@@ -3,8 +3,6 @@ import { publicClient } from "@/utils/client";
 import {
   InterfaceRoundDetailPaginated,
   InvestmentRound,
-  SortDirection,
-  SortField,
 } from "@/types/fundingContract";
 const contractInstance = getClientConnectCrownFundingContract(publicClient);
 export const fetchTotalRounds = async () => {
@@ -16,16 +14,40 @@ export const fetchTotalRounds = async () => {
 };
 
 export const fetchAllRoundsDetailPaginated = async ({
-  offset = BigInt(0),
-  limit = BigInt(0),
-  sortField = SortField.CREATED_AT,
-  sortDirection = SortDirection.DESC,
+  offset = 0,
+  limit = 0,
 }: InterfaceRoundDetailPaginated) => {
   try {
-    const roundList = await contractInstance.read.getAllRoundsDetailedPaginated(
-      [offset, limit, sortField, sortDirection]
-    );
-    return roundList;
+    const [totalRounds] = await contractInstance.read.getRoundsCount();
+    const totalCount = Number(totalRounds); // Convert BigInt to number
+
+    if (totalCount === 0) return [];
+
+    // Calculate pagination bounds for reverse order
+    const start = Math.max(totalCount - 1 - Number(offset), 0);
+    const actualLimit = limit ? Math.min(Number(limit), start + 1) : start + 1;
+    const end = Math.max(start - actualLimit + 1, 0);
+
+    const rounds = [];
+    for (let i = start; i >= end; i--) {
+      const round = await contractInstance.read.investmentRounds([BigInt(i)]);
+      rounds.push({
+        roundId: round[0],
+        roundName: round[1],
+        tokenPrice: round[2],
+        rewardPercentage: round[3],
+        totalTokenOpenInvestment: round[4],
+        tokensSold: round[5],
+        closeDateInvestment: round[6],
+        endDateInvestment: round[7],
+        isActive: round[8],
+        exists: round[9],
+        createdAt: round[10],
+        status: round[11],
+      });
+    }
+
+    return rounds;
   } catch (error) {
     console.error("Error fetching rounds:", error);
     return [];
@@ -34,10 +56,11 @@ export const fetchAllRoundsDetailPaginated = async ({
 
 export const fetchCurrentRoundId = async () => {
   try {
-    const currentRoundId = await contractInstance.read.currentRoundId();
+    const currentRoundId = await contractInstance.read.totalRoundsCreated();
     return currentRoundId;
   } catch (error) {
-    console.error("Error fetching rounds:", error);
+    console.error("Error fetching current round ID:", error);
+    return undefined;
   }
 };
 

@@ -26,10 +26,8 @@ export const statusMapping = {
   4: "DIVIDEND_PAID",
 };
 export interface InterfaceRoundDetailPaginated {
-  offset: bigint;
-  limit: bigint;
-  sortField: SortField;
-  sortDirection: SortDirection;
+  offset: number;
+  limit: number;
 }
 export interface InvestmentRound {
   roundId: bigint;

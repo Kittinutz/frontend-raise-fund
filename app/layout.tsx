@@ -4,6 +4,7 @@ import "./globals.css";
 import Footer from "@/components/ui/footer";
 import { Header } from "@/components/Header";
 import { WalletProvider } from "@/contexts/WalletProvider";
+import { Theme } from "@radix-ui/themes";
 
 const anuphan = Anuphan({
   variable: "--font-anuphan-sans",
@@ -24,11 +25,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${anuphan.className}  antialiased`}>
-        <WalletProvider>
-          <Header />
-          {children}
-          <Footer />
-        </WalletProvider>
+        <Theme>
+          <WalletProvider>
+            <Header />
+            {children}
+            <Footer />
+          </WalletProvider>
+        </Theme>
       </body>
     </html>
   );

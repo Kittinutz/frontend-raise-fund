@@ -205,7 +205,7 @@ const useFundingContract = (): FundingContractHook => {
             params.roundName,
             params.tokenPrice,
             params.rewardPercentage,
-            params.totalTokenOpenInvestment,
+            paramstotalToken,
             params.closeDateInvestment,
             params.endDateInvestment,
           ],

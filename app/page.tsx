@@ -34,7 +34,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <Badge className="mb-4 bg-primary text-white hover:bg-primary/90">
-                🐄 1 Coin = 1 Cow
+                🐄 1 NFT = 1 Cow
               </Badge>
               <h1 className="text-4xl md:text-5xl lg:text-6xl mb-6 text-white">
                 Invest in Cattle,

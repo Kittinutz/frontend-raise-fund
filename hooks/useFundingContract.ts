@@ -23,10 +23,8 @@ const useFundingContract = () => {
   const [selectedRoundId, setSelectedRoundId] = useState<bigint | null>(null);
   const [pagination, setPagination] = useState({
     offset: 0,
-    limit: 1,
+    limit: 5,
     currentPage: 1,
-    sortField: SortField.CREATED_AT,
-    sortDirection: SortDirection.DESC,
   });
 
   const [totalRounds, setTotalRounds] = useState<bigint | null>(null);
@@ -55,13 +53,13 @@ const useFundingContract = () => {
           await publicClient.waitForTransactionReceipt({ hash });
         }
 
-        const [roundListData] = await fetchAllRoundsDetailPaginated({
-          offset: BigInt(pagination.offset),
-          limit: BigInt(pagination.limit),
-          sortField: pagination.sortField,
-          sortDirection: pagination.sortDirection,
+        const roundListData = await fetchAllRoundsDetailPaginated({
+          offset: pagination.offset,
+          limit: pagination.limit,
         });
-        setRoundList([...(roundListData ?? [])]);
+        console.log({
+          roundListData,
+        });
       } catch (e) {
         console.error("Error investing in round:", e);
       }
@@ -81,22 +79,18 @@ const useFundingContract = () => {
   useEffect(() => {
     async function initialize() {
       const rounds = await fetchTotalRounds();
-      const [roundListData] = await fetchAllRoundsDetailPaginated({
-        offset: BigInt(pagination.offset),
-        limit: BigInt(1),
-        sortField: pagination.sortField,
-        sortDirection: pagination.sortDirection,
+      const roundListData = await fetchAllRoundsDetailPaginated({
+        offset: pagination.offset,
+        limit: pagination.limit,
       });
-      setRoundList([...(roundListData ?? [])]);
+      console.log({
+        roundListData,
+      });
+      setRoundList(roundListData ?? []);
       setTotalRounds(rounds || null);
     }
     initialize();
-  }, [
-    pagination.limit,
-    pagination.offset,
-    pagination.sortDirection,
-    pagination.sortField,
-  ]);
+  }, [pagination.limit, pagination.offset]);
 
   return {
     totalRounds,
