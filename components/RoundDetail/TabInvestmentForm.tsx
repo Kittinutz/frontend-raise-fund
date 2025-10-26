@@ -36,6 +36,7 @@ export default function TabInvestmentForm({
   updateRoundDetail?: (roundId: bigint) => void;
 }) {
   const [tokenAmount, setTokenAmount] = useState("0");
+  const [isInvesting, setIsInvesting] = useState(false);
   const { isConnected, connectWallet, currentAddress, walletClient } =
     useWallet();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -95,13 +96,21 @@ export default function TabInvestmentForm({
   }, [currentAddress, handleApprove, roundDetail, tokenAmount]);
 
   const handleInvest = async () => {
-    await investRounds(roundDetail!.roundId, BigInt(tokenAmount));
-    setTokenAmount("0");
-    setAllowance(undefined);
-    await updateRoundDetail(roundDetail!.roundId);
-    toast.success(
-      `Successfully invested ${tokenAmount} tokens (${calculatedUSDT.toLocaleString()} USDT)!`
-    );
+    try {
+      setIsInvesting(true);
+      await investRounds(roundDetail!.roundId, BigInt(tokenAmount));
+      setTokenAmount("0");
+      setAllowance(undefined);
+      await updateRoundDetail(roundDetail!.roundId);
+      toast.success(
+        `Successfully invested ${tokenAmount} tokens (${calculatedUSDT.toLocaleString()} USDT)!`
+      );
+    } catch (error) {
+      toast.error("Investment failed. Please try again.");
+      console.error("Investment error:", error);
+    } finally {
+      setIsInvesting(false);
+    }
   };
 
   const isAllowed = useMemo(() => {
@@ -109,30 +118,36 @@ export default function TabInvestmentForm({
   }, [allowance, roundDetail, tokenAmount]);
   const tokenLimit = 80;
 
+  // Calculate remaining tokens the user can purchase
+  const remainingTokensForUser = useMemo(() => {
+    return Math.max(0, tokenLimit - currentInvestorTokenInRound);
+  }, [currentInvestorTokenInRound, tokenLimit]);
+
+  // Check if user has reached maximum token limit
+  const hasReachedMaxTokens = useMemo(() => {
+    return currentInvestorTokenInRound >= tokenLimit;
+  }, [currentInvestorTokenInRound, tokenLimit]);
+
   const handlerWheel = (e: React.WheelEvent<HTMLInputElement>) => {
     e.stopPropagation();
   };
 
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.addEventListener(
-        "wheel",
-        (e) => {
-          e.preventDefault();
-        },
-        {
-          passive: true,
-        }
-      );
+    const currentInput = inputRef.current;
+    const wheelHandler = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+
+    if (currentInput) {
+      currentInput.addEventListener("wheel", wheelHandler, { passive: false });
     }
+
     return () => {
-      if (inputRef.current) {
-        inputRef.current.removeEventListener("wheel", (e) => {
-          e.preventDefault();
-        });
+      if (currentInput) {
+        currentInput.removeEventListener("wheel", wheelHandler);
       }
     };
-  }, [inputRef]);
+  }, []);
 
   if (!roundDetail) {
     return (
@@ -174,6 +189,38 @@ export default function TabInvestmentForm({
               </Alert>
             )}
 
+            {/* Maximum Token Limit Reached Alert */}
+            {hasReachedMaxTokens && (
+              <Alert className="border-orange-200 bg-orange-50">
+                <AlertCircle className="h-4 w-4 text-orange-600" />
+                <AlertDescription className="text-orange-800">
+                  <div className="space-y-1">
+                    <p className="font-semibold">Maximum Token Limit Reached</p>
+                    <p>
+                      You already hold {currentInvestorTokenInRound} NFT tokens for this round. 
+                      The maximum limit is {tokenLimit} tokens per wallet per round.
+                    </p>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Remaining Tokens Info */}
+            {!hasReachedMaxTokens && remainingTokensForUser < tokenLimit && (
+              <Alert className="border-blue-200 bg-blue-50">
+                <Info className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  <div className="space-y-1">
+                    <p className="font-semibold">Token Limit Information</p>
+                    <p>
+                      You currently hold {currentInvestorTokenInRound} NFT tokens for this round. 
+                      You can purchase up to {remainingTokensForUser} more tokens (maximum {tokenLimit} tokens per wallet).
+                    </p>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+
             <div className="space-y-6">
               {/* Number of Tokens Input */}
               <div>
@@ -207,13 +254,13 @@ export default function TabInvestmentForm({
                     id="tokens"
                     type="number"
                     min="1"
-                    max={tokenLimit}
+                    max={hasReachedMaxTokens ? 0 : remainingTokensForUser}
                     ref={inputRef}
                     onWheel={handlerWheel}
                     value={tokenAmount}
                     onChange={(e) => setTokenAmount(e.target.value)}
-                    disabled={roundDetail.status !== Status.OPEN}
-                    placeholder="Enter number of tokens to invest"
+                    disabled={roundDetail.status !== Status.OPEN || hasReachedMaxTokens}
+                    placeholder={hasReachedMaxTokens ? "Maximum tokens reached" : "Enter number of tokens to invest"}
                     className="text-lg h-14 rounded-xl border-gray-300 focus:ring-primary focus:border-primary pr-32 text-gray-900
                     [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none
                     
@@ -225,6 +272,13 @@ export default function TabInvestmentForm({
                     </div>
                   )}
                 </div>
+
+                {/* Token Limit Validation Message */}
+                {tokenAmount && parseFloat(tokenAmount) > remainingTokensForUser && !hasReachedMaxTokens && (
+                  <p className="text-sm text-orange-600 mt-1">
+                    Amount exceeds your remaining token limit. You can purchase up to {remainingTokensForUser} more tokens.
+                  </p>
+                )}
 
                 {/* Helper Text */}
                 <div className="mt-2 space-y-1">
@@ -311,19 +365,34 @@ export default function TabInvestmentForm({
                 {isAllowed ? (
                   <Button
                     onClick={handleInvest}
-                    className="w-full h-12 text-base bg-primary hover:bg-primary/90 rounded-xl"
+                    disabled={
+                      roundDetail.status !== Status.OPEN ||
+                      hasReachedMaxTokens ||
+                      !tokenAmount ||
+                      parseFloat(tokenAmount) <= 0 ||
+                      parseFloat(tokenAmount) > tokenRemaining ||
+                      parseFloat(tokenAmount) > remainingTokensForUser
+                    }
+                    className="w-full h-12 text-base bg-primary hover:bg-primary/90 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Confirm Investment
+                    {hasReachedMaxTokens 
+                      ? "Maximum Tokens Reached" 
+                      : isInvesting 
+                        ? "Processing..." 
+                        : "Confirm Investment"
+                    }
                   </Button>
                 ) : (
                   <Button
                     onClick={handleAuthorize}
                     disabled={
                       roundDetail.status !== Status.OPEN ||
+                      hasReachedMaxTokens ||
                       isAuthorized ||
                       !tokenAmount ||
                       parseFloat(tokenAmount) <= 0 ||
-                      parseFloat(tokenAmount) > tokenRemaining
+                      parseFloat(tokenAmount) > tokenRemaining ||
+                      parseFloat(tokenAmount) > remainingTokensForUser
                     }
                     variant={isAuthorized ? "outline" : "default"}
                     className="w-full h-12 text-base rounded-xl"
