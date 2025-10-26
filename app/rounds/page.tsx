@@ -164,11 +164,21 @@ export default function RoundListPage() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-600 mb-1">
-                        Investment Ends
+                        Round End Date
                       </p>
                       <p className="text-sm text-primary">
                         {new Date(
-                          Number(round.endDateInvestment)
+                          Number(round.endDateInvestment * 1000n)
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">
+                        Close Investment Date
+                      </p>
+                      <p className="text-sm text-primary">
+                        {new Date(
+                          Number(round.closeDateInvestment * 1000n)
                         ).toLocaleDateString()}
                       </p>
                     </div>

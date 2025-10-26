@@ -82,43 +82,6 @@ const crowdFundingABI = [
     inputs: [
       {
         indexed: true,
-        internalType: "uint256",
-        name: "roundId",
-        type: "uint256",
-      },
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "investor",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amountUSDT",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "tokensReceived",
-        type: "uint256",
-      },
-    ],
-    name: "InvestmentMade",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
         internalType: "address",
         name: "previousOwner",
         type: "address",
@@ -152,31 +115,6 @@ const crowdFundingABI = [
       {
         indexed: true,
         internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "investor",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "payout",
-        type: "uint256",
-      },
-    ],
-    name: "RedemptionMade",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
         name: "roundId",
         type: "uint256",
       },
@@ -194,142 +132,6 @@ const crowdFundingABI = [
       },
     ],
     name: "RewardAdded",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "investor",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "totalClaimable",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "nftCount",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256[]",
-        name: "roundIds",
-        type: "uint256[]",
-      },
-    ],
-    name: "RewardDistributionCalculated",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "investor",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "totalAmount",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256[]",
-        name: "roundIds",
-        type: "uint256[]",
-      },
-      {
-        indexed: false,
-        internalType: "uint256[]",
-        name: "amounts",
-        type: "uint256[]",
-      },
-      {
-        indexed: false,
-        internalType: "uint256[]",
-        name: "tokenIds",
-        type: "uint256[]",
-      },
-    ],
-    name: "RewardsClaimed",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "roundId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "roundName",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "tokenPrice",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "rewardPercentage",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "totalTokenOpenInvestment",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "closeDateInvestment",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "endDateInvestment",
-        type: "uint256",
-      },
-    ],
-    name: "RoundCreated",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "roundId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-    ],
-    name: "RoundEmergencyWithdraw",
     type: "event",
   },
   {
@@ -368,31 +170,6 @@ const crowdFundingABI = [
       },
     ],
     name: "RoundStatusChanged",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "roundId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "enum FundRaisingContractNFT.Status",
-        name: "oldStatus",
-        type: "uint8",
-      },
-      {
-        indexed: false,
-        internalType: "enum FundRaisingContractNFT.Status",
-        name: "newStatus",
-        type: "uint8",
-      },
-    ],
-    name: "RoundStatusUpdated",
     type: "event",
   },
   {
@@ -695,22 +472,147 @@ const crowdFundingABI = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "roundId",
-        type: "uint256",
+        internalType: "address",
+        name: "investor",
+        type: "address",
       },
     ],
-    name: "getRoundInvestors",
+    name: "getInvestorDetail",
     outputs: [
       {
-        internalType: "address[]",
-        name: "investors",
-        type: "address[]",
+        internalType: "uint256",
+        name: "totalTokensOwned",
+        type: "uint256",
       },
       {
         internalType: "uint256[]",
-        name: "nftCounts",
+        name: "nftTokenIds",
         type: "uint256[]",
+      },
+      {
+        internalType: "uint256",
+        name: "totalInvestment",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "dividendsEarned",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256[]",
+        name: "activeRounds",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "investor",
+        type: "address",
+      },
+    ],
+    name: "getInvestorRoundIds",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "roundIds",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "investor",
+        type: "address",
+      },
+    ],
+    name: "getInvestorRounds",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "roundIds",
+        type: "uint256[]",
+      },
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "roundId",
+            type: "uint256",
+          },
+          {
+            internalType: "string",
+            name: "roundName",
+            type: "string",
+          },
+          {
+            internalType: "uint256",
+            name: "tokenPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "rewardPercentage",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalTokenOpenInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "tokensSold",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "closeDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "endDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "bool",
+            name: "isActive",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "exists",
+            type: "bool",
+          },
+          {
+            internalType: "uint256",
+            name: "createdAt",
+            type: "uint256",
+          },
+          {
+            internalType: "enum FundRaisingContractNFT.Status",
+            name: "status",
+            type: "uint8",
+          },
+        ],
+        internalType: "struct FundRaisingContractNFT.InvestmentRound[]",
+        name: "rounds",
+        type: "tuple[]",
+      },
+      {
+        internalType: "uint256[][]",
+        name: "nfts",
+        type: "uint256[][]",
       },
     ],
     stateMutability: "view",
@@ -946,6 +848,49 @@ const crowdFundingABI = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "investorDividendsEarned",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "investorRounds",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "owner",
     outputs: [
@@ -992,51 +937,8 @@ const crowdFundingABI = [
         name: "",
         type: "uint256",
       },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "rewardClaimHistory",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
     ],
     name: "roundLedger",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "roundRewardPerNFT",
     outputs: [
       {
         internalType: "uint256",
@@ -1137,25 +1039,6 @@ const crowdFundingABI = [
   {
     inputs: [],
     name: "totalUSDTRaised",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "totalUserRewardsClaimed",
     outputs: [
       {
         internalType: "uint256",
@@ -1284,30 +1167,6 @@ const crowdFundingABI = [
       },
     ],
     name: "userNFTsInRound",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "userRewardClaimHistory",
     outputs: [
       {
         internalType: "uint256",

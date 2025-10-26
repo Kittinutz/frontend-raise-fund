@@ -43,3 +43,11 @@ export interface InvestmentRound {
   createdAt: bigint;
   status: Status;
 }
+
+export interface InvestorDashboard {
+  totalTokensOwned: bigint;
+  nftTokenIds: bigint[];
+  totalInvestedAmount: bigint;
+  totalDividendEarned: bigint;
+  activeRounds: bigint[];
+}

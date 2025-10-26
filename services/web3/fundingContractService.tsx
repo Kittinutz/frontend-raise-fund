@@ -3,6 +3,7 @@ import { publicClient } from "@/utils/client";
 import {
   InterfaceRoundDetailPaginated,
   InvestmentRound,
+  InvestorDashboard,
 } from "@/types/fundingContract";
 const contractInstance = getClientConnectCrownFundingContract(publicClient);
 export const fetchTotalRounds = async () => {
@@ -74,5 +75,43 @@ export const fetchRoundByID = async (
     return roundDetail;
   } catch (e) {
     console.error("Error fetchRoundByID", e);
+  }
+};
+
+export const fetchUserDashboardData = async (
+  userAddress: `0x${string}`
+): Promise<InvestorDashboard | undefined> => {
+  try {
+    const dashboardData = await contractInstance.read.getInvestorDetail([
+      userAddress,
+    ]);
+    const transformedDashboardData: InvestorDashboard = {
+      totalTokensOwned: dashboardData[0],
+      nftTokenIds: dashboardData[1] as bigint[],
+      totalInvestedAmount: dashboardData[2],
+      totalDividendEarned: dashboardData[3],
+      activeRounds: dashboardData[4] as bigint[],
+    };
+    return transformedDashboardData;
+  } catch (e) {
+    console.error("Error fetchUserDashboardData", e);
+    return undefined;
+  }
+};
+
+export const fetchUserInvestedRounds = async (
+  userAddress: `0x${string}`
+): Promise<[bigint[], InvestmentRound[], bigint[][]] | undefined> => {
+  try {
+    const [roundIds, roundDetail, nfts] =
+      await contractInstance.read.getInvestorRounds([userAddress]);
+    return [
+      roundIds as bigint[],
+      roundDetail as InvestmentRound[],
+      nfts as bigint[][],
+    ];
+  } catch (e) {
+    console.error("Error fetchUserInvestedRounds", e);
+    return undefined;
   }
 };

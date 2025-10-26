@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import { Separator } from "../ui/separator";
 import { useWallet } from "@/contexts/WalletProvider";
 import { InvestmentRound, Status } from "@/types/fundingContract";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatEther } from "viem";
 import useUSDTokenContract from "@/hooks/useUSDTokenContract";
 import { fetchAllowance } from "@/services/web3/usdtService";
@@ -38,10 +38,17 @@ export default function TabInvestmentForm({
   const [tokenAmount, setTokenAmount] = useState("0");
   const { isConnected, connectWallet, currentAddress, walletClient } =
     useWallet();
+  const inputRef = useRef<HTMLInputElement>(null);
   const { handleApprove } = useUSDTokenContract(walletClient!);
-  const { investRounds } = useFundingContract();
+  const { investRounds, investorNftIds } = useFundingContract();
   const [allowance, setAllowance] = useState<bigint | undefined>();
   const isAuthorized = false;
+  const currentInvestorTokenInRound = useMemo(() => {
+    return (investorNftIds[Number(roundDetail?.roundId)] ?? []).length;
+  }, [investorNftIds, roundDetail?.roundId]);
+  console.log({
+    currentInvestorTokenInRound,
+  });
   // const getStatusColor = (status: string) => {
   //   switch (status) {
   //     case "OPEN":
@@ -86,6 +93,7 @@ export default function TabInvestmentForm({
       "USDT authorization successful! You can now confirm your investment."
     );
   }, [currentAddress, handleApprove, roundDetail, tokenAmount]);
+
   const handleInvest = async () => {
     await investRounds(roundDetail!.roundId, BigInt(tokenAmount));
     setTokenAmount("0");
@@ -99,6 +107,32 @@ export default function TabInvestmentForm({
   const isAllowed = useMemo(() => {
     return allowance == BigInt(tokenAmount) * BigInt(roundDetail!.tokenPrice);
   }, [allowance, roundDetail, tokenAmount]);
+  const tokenLimit = 80;
+
+  const handlerWheel = (e: React.WheelEvent<HTMLInputElement>) => {
+    e.stopPropagation();
+  };
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.addEventListener(
+        "wheel",
+        (e) => {
+          e.preventDefault();
+        },
+        {
+          passive: true,
+        }
+      );
+    }
+    return () => {
+      if (inputRef.current) {
+        inputRef.current.removeEventListener("wheel", (e) => {
+          e.preventDefault();
+        });
+      }
+    };
+  }, [inputRef]);
 
   if (!roundDetail) {
     return (
@@ -173,12 +207,17 @@ export default function TabInvestmentForm({
                     id="tokens"
                     type="number"
                     min="1"
-                    max={tokenRemaining}
+                    max={tokenLimit}
+                    ref={inputRef}
+                    onWheel={handlerWheel}
                     value={tokenAmount}
                     onChange={(e) => setTokenAmount(e.target.value)}
                     disabled={roundDetail.status !== Status.OPEN}
                     placeholder="Enter number of tokens to invest"
-                    className="text-lg h-14 rounded-xl border-gray-300 focus:ring-primary focus:border-primary pr-32 text-gray-900"
+                    className="text-lg h-14 rounded-xl border-gray-300 focus:ring-primary focus:border-primary pr-32 text-gray-900
+                    [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none
+                    
+                    "
                   />
                   {tokenAmount && parseFloat(tokenAmount) > 0 && (
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-medium text-primary">
@@ -197,19 +236,19 @@ export default function TabInvestmentForm({
                     <span className="inline-block w-1.5 h-1.5 rounded-full bg-gray-400"></span>
                     Minimum: <span className="font-medium">1 Token</span>,
                     Maximum:{" "}
-                    <span className="font-medium">{tokenRemaining} Tokens</span>
+                    <span className="font-medium">{tokenLimit} Tokens</span>
                   </p>
                 </div>
 
                 {/* Validation Error */}
                 {tokenAmount &&
                   (parseFloat(tokenAmount) < 1 ||
-                    parseFloat(tokenAmount) > tokenRemaining) && (
+                    parseFloat(tokenAmount) > tokenLimit) && (
                     <p className="text-sm text-red-600 mt-2 flex items-center gap-1.5">
                       <AlertCircle className="h-4 w-4" />
                       {parseFloat(tokenAmount) < 1
                         ? "Please enter at least 1 token"
-                        : `Maximum available tokens: ${tokenRemaining}`}
+                        : `Maximum available tokens: ${tokenLimit}`}
                     </p>
                   )}
               </div>

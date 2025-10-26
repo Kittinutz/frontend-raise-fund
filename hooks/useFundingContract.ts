@@ -2,11 +2,14 @@ import {
   fetchTotalRounds,
   fetchAllRoundsDetailPaginated,
   fetchRoundByID,
+  fetchUserDashboardData,
+  fetchUserInvestedRounds,
 } from "@/services/web3/fundingContractService";
 import { useWallet } from "@/contexts/WalletProvider";
 import getClientConnectCrownFundingContract from "@/contract/fundingContract";
 import {
   InvestmentRound,
+  InvestorDashboard,
   SortDirection,
   SortField,
 } from "@/types/fundingContract";
@@ -28,7 +31,11 @@ const useFundingContract = () => {
   });
 
   const [totalRounds, setTotalRounds] = useState<bigint | null>(null);
-
+  const [investorDashboard, setInvestorDashboard] =
+    useState<InvestorDashboard | null>(null);
+  const [investorRounds, setInvestorRounds] = useState<InvestmentRound[]>([]);
+  const [investorRoundIds, setInvestorRoundIds] = useState<bigint[]>([]);
+  const [investorNftIds, setInvestorNftIds] = useState<bigint[][]>([]);
   const contract = useMemo(() => {
     if (!walletClient) return null;
     return getClientConnectCrownFundingContract(walletClient);
@@ -42,13 +49,10 @@ const useFundingContract = () => {
       }
 
       try {
-        const hash = await contract?.write.investInRound(
-          [roundId, BigInt(amount)],
-          {
-            account: currentAddress as `0x${string}`,
-            chain: foundry,
-          }
-        );
+        const hash = await contract?.write.investInRound([roundId, amount], {
+          account: currentAddress as `0x${string}`,
+          chain: foundry,
+        });
         if (hash) {
           await publicClient.waitForTransactionReceipt({ hash });
         }
@@ -75,7 +79,24 @@ const useFundingContract = () => {
     }
     fetchRound();
   }, [selectedRoundId]);
+  useEffect(() => {
+    async function fetchInvestorDashboard() {
+      if (currentAddress) {
+        const dashboardData = await fetchUserDashboardData(
+          currentAddress as `0x${string}`
+        );
+        setInvestorDashboard(dashboardData || null);
 
+        const [roundIds, rounds, nfts] = (await fetchUserInvestedRounds(
+          currentAddress as `0x${string}`
+        )) || [[], [], [[]]];
+        setInvestorRoundIds(roundIds);
+        setInvestorRounds(rounds);
+        setInvestorNftIds(nfts);
+      }
+    }
+    fetchInvestorDashboard();
+  }, [currentAddress]);
   useEffect(() => {
     async function initialize() {
       const rounds = await fetchTotalRounds();
@@ -100,6 +121,11 @@ const useFundingContract = () => {
     fundingContractAddress: contract?.address || null,
     setSelectedRoundId,
     setPagination,
+    pagination,
+    investorDashboard,
+    investorRounds,
+    investorRoundIds,
+    investorNftIds,
   };
 };
 
