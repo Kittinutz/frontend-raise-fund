@@ -5,6 +5,7 @@ import {
   InvestmentRound,
   InvestorDashboard,
 } from "@/types/fundingContract";
+import { fetchNFtInfo } from "./nftContractService";
 const contractInstance = getClientConnectCrownFundingContract(publicClient);
 export const fetchTotalRounds = async () => {
   try {
@@ -67,14 +68,16 @@ export const fetchCurrentRoundId = async () => {
 
 export const fetchRoundByID = async (
   roundId: bigint
-): Promise<InvestmentRound | undefined> => {
+): Promise<
+  (InvestmentRound & { isEnableClaimReward: boolean | undefined }) | undefined
+> => {
   try {
-    const roundDetail = await contractInstance.read.getInvestmentRound([
-      roundId,
-    ]);
-    return roundDetail;
+    const [roundDetail, isEnableClaimReward] =
+      await contractInstance.read.getInvestmentRound([roundId]);
+    return { ...roundDetail, isEnableClaimReward };
   } catch (e) {
     console.error("Error fetchRoundByID", e);
+    return undefined;
   }
 };
 
@@ -101,14 +104,36 @@ export const fetchUserDashboardData = async (
 
 export const fetchUserInvestedRounds = async (
   userAddress: `0x${string}`
-): Promise<[bigint[], InvestmentRound[], bigint[][]] | undefined> => {
+): Promise<
+  | [bigint[], InvestmentRound[], bigint[][], InvestmentRound[][], boolean[]]
+  | undefined
+> => {
   try {
-    const [roundIds, roundDetail, nfts] =
+    const nftDetail: InvestmentRound[][] = [];
+    const [roundIds, roundDetail, nfts, isEnableClaimReward] =
       await contractInstance.read.getInvestorRounds([userAddress]);
+
+    for (let i = 0; i < roundIds.length; i++) {
+      const nftDetailPromise = nfts[Number(roundIds[i])].map(
+        (tokenId: bigint) => fetchNFtInfo(tokenId)
+      );
+
+      const nftDetailsForRound: InvestmentRound[] = (
+        await Promise.all(nftDetailPromise)
+      ).filter((detail): detail is InvestmentRound => detail !== undefined);
+
+      if (!nftDetail[Number(roundIds[i])]) {
+        nftDetail[Number(roundIds[i])] = [];
+      }
+
+      nftDetail[Number(roundIds[i])].push(...nftDetailsForRound);
+    }
     return [
       roundIds as bigint[],
       roundDetail as InvestmentRound[],
       nfts as bigint[][],
+      nftDetail as InvestmentRound[][],
+      isEnableClaimReward as boolean[],
     ];
   } catch (e) {
     console.error("Error fetchUserInvestedRounds", e);

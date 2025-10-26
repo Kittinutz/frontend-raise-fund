@@ -465,6 +465,11 @@ const crowdFundingABI = [
         name: "",
         type: "tuple",
       },
+      {
+        internalType: "bool",
+        name: "enableClaimReward",
+        type: "bool",
+      },
     ],
     stateMutability: "view",
     type: "function",
@@ -613,6 +618,11 @@ const crowdFundingABI = [
         internalType: "uint256[][]",
         name: "nfts",
         type: "uint256[][]",
+      },
+      {
+        internalType: "bool[]",
+        name: "isEnableClaimReward",
+        type: "bool[]",
       },
     ],
     stateMutability: "view",

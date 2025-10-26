@@ -937,6 +937,195 @@ export default [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "walletAddress",
+        type: "address",
+      },
+    ],
+    name: "getWalletNFTSummary",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "totalNFTs",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "activeInvestments",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "redeemedInvestments",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "claimedRewards",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "totalInvestedValue",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "totalExpectedRewards",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "claimableAmount",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "walletAddress",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "offset",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "limit",
+        type: "uint256",
+      },
+    ],
+    name: "getWalletNFTsPaginated",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "tokenIds",
+        type: "uint256[]",
+      },
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "tokenId",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "roundId",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "tokenPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "rewardPercentage",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalTokenOpenInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "purchaseTimestamp",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "closeDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "endDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "originalBuyer",
+            type: "address",
+          },
+          {
+            internalType: "bool",
+            name: "redeemed",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "rewardClaimed",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "transferLocked",
+            type: "bool",
+          },
+          {
+            internalType: "string",
+            name: "metadata",
+            type: "string",
+          },
+        ],
+        internalType: "struct DZNFT.InvestmentData[]",
+        name: "investmentDetails",
+        type: "tuple[]",
+      },
+      {
+        internalType: "uint256",
+        name: "totalTokens",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "totalPages",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "currentPage",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "hasMore",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "walletAddress",
+        type: "address",
+      },
+    ],
+    name: "getWalletTokenIds",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "tokenIds",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "bytes32",
         name: "role",
         type: "bytes32",
@@ -1153,6 +1342,19 @@ export default [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+    ],
+    name: "lockTransfer",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {

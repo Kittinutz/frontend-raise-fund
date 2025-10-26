@@ -47,9 +47,7 @@ export default function TabInvestmentForm({
   const currentInvestorTokenInRound = useMemo(() => {
     return (investorNftIds[Number(roundDetail?.roundId)] ?? []).length;
   }, [investorNftIds, roundDetail?.roundId]);
-  console.log({
-    currentInvestorTokenInRound,
-  });
+
   // const getStatusColor = (status: string) => {
   //   switch (status) {
   //     case "OPEN":
@@ -197,8 +195,9 @@ export default function TabInvestmentForm({
                   <div className="space-y-1">
                     <p className="font-semibold">Maximum Token Limit Reached</p>
                     <p>
-                      You already hold {currentInvestorTokenInRound} NFT tokens for this round. 
-                      The maximum limit is {tokenLimit} tokens per wallet per round.
+                      You already hold {currentInvestorTokenInRound} NFT tokens
+                      for this round. The maximum limit is {tokenLimit} tokens
+                      per wallet per round.
                     </p>
                   </div>
                 </AlertDescription>
@@ -213,8 +212,10 @@ export default function TabInvestmentForm({
                   <div className="space-y-1">
                     <p className="font-semibold">Token Limit Information</p>
                     <p>
-                      You currently hold {currentInvestorTokenInRound} NFT tokens for this round. 
-                      You can purchase up to {remainingTokensForUser} more tokens (maximum {tokenLimit} tokens per wallet).
+                      You currently hold {currentInvestorTokenInRound} NFT
+                      tokens for this round. You can purchase up to{" "}
+                      {remainingTokensForUser} more tokens (maximum {tokenLimit}{" "}
+                      tokens per wallet).
                     </p>
                   </div>
                 </AlertDescription>
@@ -259,8 +260,14 @@ export default function TabInvestmentForm({
                     onWheel={handlerWheel}
                     value={tokenAmount}
                     onChange={(e) => setTokenAmount(e.target.value)}
-                    disabled={roundDetail.status !== Status.OPEN || hasReachedMaxTokens}
-                    placeholder={hasReachedMaxTokens ? "Maximum tokens reached" : "Enter number of tokens to invest"}
+                    disabled={
+                      roundDetail.status !== Status.OPEN || hasReachedMaxTokens
+                    }
+                    placeholder={
+                      hasReachedMaxTokens
+                        ? "Maximum tokens reached"
+                        : "Enter number of tokens to invest"
+                    }
                     className="text-lg h-14 rounded-xl border-gray-300 focus:ring-primary focus:border-primary pr-32 text-gray-900
                     [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:m-0 [&::-webkit-outer-spin-button]:appearance-none
                     
@@ -274,11 +281,14 @@ export default function TabInvestmentForm({
                 </div>
 
                 {/* Token Limit Validation Message */}
-                {tokenAmount && parseFloat(tokenAmount) > remainingTokensForUser && !hasReachedMaxTokens && (
-                  <p className="text-sm text-orange-600 mt-1">
-                    Amount exceeds your remaining token limit. You can purchase up to {remainingTokensForUser} more tokens.
-                  </p>
-                )}
+                {tokenAmount &&
+                  parseFloat(tokenAmount) > remainingTokensForUser &&
+                  !hasReachedMaxTokens && (
+                    <p className="text-sm text-orange-600 mt-1">
+                      Amount exceeds your remaining token limit. You can
+                      purchase up to {remainingTokensForUser} more tokens.
+                    </p>
+                  )}
 
                 {/* Helper Text */}
                 <div className="mt-2 space-y-1">
@@ -375,12 +385,11 @@ export default function TabInvestmentForm({
                     }
                     className="w-full h-12 text-base bg-primary hover:bg-primary/90 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {hasReachedMaxTokens 
-                      ? "Maximum Tokens Reached" 
-                      : isInvesting 
-                        ? "Processing..." 
-                        : "Confirm Investment"
-                    }
+                    {hasReachedMaxTokens
+                      ? "Maximum Tokens Reached"
+                      : isInvesting
+                      ? "Processing..."
+                      : "Confirm Investment"}
                   </Button>
                 ) : (
                   <Button

@@ -7,12 +7,7 @@ import {
 } from "@/services/web3/fundingContractService";
 import { useWallet } from "@/contexts/WalletProvider";
 import getClientConnectCrownFundingContract from "@/contract/fundingContract";
-import {
-  InvestmentRound,
-  InvestorDashboard,
-  SortDirection,
-  SortField,
-} from "@/types/fundingContract";
+import { InvestmentRound, InvestorDashboard } from "@/types/fundingContract";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { foundry } from "viem/chains";
 import { publicClient } from "@/utils/client";
@@ -23,6 +18,7 @@ const useFundingContract = () => {
   const [selectedRound, setSelectedRound] = useState<InvestmentRound | null>(
     null
   );
+
   const [selectedRoundId, setSelectedRoundId] = useState<bigint | null>(null);
   const [pagination, setPagination] = useState({
     offset: 0,

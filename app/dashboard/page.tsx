@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -47,46 +47,35 @@ import {
 import { toast } from "sonner";
 import { useWallet } from "@/contexts/WalletProvider";
 import useFundingContract from "@/hooks/useFundingContract";
-import { InvestmentRound } from "@/types/fundingContract";
+import { InvestmentRound, statusMapping } from "@/types/fundingContract";
 import { formatEther } from "viem";
+import dayjs from "dayjs";
+import { format } from "path";
 
 export default function InvestorDashboard() {
   const { isConnected } = useWallet();
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedInvestment, setSelectedInvestment] = useState<any>(null);
+  const [selectedInvestment, setSelectedInvestment] =
+    useState<InvestmentRound | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const itemsPerPage = 5;
-  const {
-    investorDashboard,
-    investorRounds,
-    investorRoundIds,
-    investorNftIds,
-  } = useFundingContract();
+  const { investorDashboard, investorRounds, investorNftIds } =
+    useFundingContract();
 
   // Check if investment is claimable (6 months after round creation)
-  const isClaimable = (round: InvestmentRound) => {
-    const roundCreationDate = new Date(
+  const isClaimable = useCallback((round: InvestmentRound) => {
+    const roundCloseDateInvestment = dayjs(
       Number(round.closeDateInvestment) * 1000
     );
-    const sixMonthsLater = new Date(roundCreationDate);
-    sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
-    const currentDate = new Date();
-    return currentDate >= sixMonthsLater;
-  };
+    const sixMonthsLater = roundCloseDateInvestment.add(180, "day");
+    const currentDate = dayjs();
+    return currentDate.isAfter(sixMonthsLater);
+  }, []);
 
   // Pagination logic
-  const totalPages = 3;
+  const totalPages = 0;
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-
-  // const handleClaimReward = (roundId: string) => {
-  //   if (isClaimable(roundId)) {
-  //     toast.success("Reward claimed successfully!");
-  //     setDetailDialogOpen(false);
-  //   } else {
-  //     toast.error("This reward is not yet claimable");
-  //   }
-  // };
 
   const tokenOwned = useMemo(
     () => investorDashboard?.totalTokensOwned || 0,
@@ -111,6 +100,71 @@ export default function InvestorDashboard() {
     () => investorDashboard?.activeRounds || 0,
     [investorDashboard]
   );
+  const handleViewDetail = (roundId: bigint) => {
+    const round = investorRounds.find((r) => r.roundId === roundId);
+    if (round) {
+      setSelectedInvestment(round);
+      setDetailDialogOpen(true);
+    }
+  };
+
+  const selectedInvestmentAmount = useMemo(() => {
+    if (selectedInvestment === null) return "0";
+    return (
+      (investorNftIds[Number(selectedInvestment.roundId)]?.length ?? 0) *
+      Number(formatEther(selectedInvestment.tokenPrice))
+    ).toLocaleString();
+  }, [selectedInvestment, investorNftIds]);
+
+  const calculateRoundTokenOwned = useCallback(
+    (selectedInvestment: InvestmentRound | null) => {
+      if (selectedInvestment === null) return 0;
+      return investorNftIds[Number(selectedInvestment.roundId)]?.length ?? 0;
+    },
+    [investorNftIds]
+  );
+
+  const calculationEarnDividends = useCallback(
+    (round: InvestmentRound | null) => {
+      const selectedRoundTokenOwned = calculateRoundTokenOwned(round);
+      if (round === null) return "0";
+
+      const now = dayjs();
+      const percentage = Number(round.rewardPercentage);
+
+      const closeDateInvestment = dayjs(
+        Number(round.closeDateInvestment) * 1000
+      );
+
+      const diff = now.diff(closeDateInvestment, "days");
+
+      if (now.isBefore(closeDateInvestment)) {
+        return "0";
+      }
+
+      if (diff >= 365) {
+        return (
+          selectedRoundTokenOwned *
+          Number(formatEther(round.tokenPrice)) *
+          (percentage / 100)
+        ).toLocaleString();
+      } else {
+        const perDatePercentage = percentage / 365 / 100;
+        return (
+          selectedRoundTokenOwned *
+          Number(formatEther(round.tokenPrice)) *
+          perDatePercentage *
+          diff
+        ).toLocaleString("en-US", { maximumFractionDigits: 2 });
+      }
+    },
+    [calculateRoundTokenOwned]
+  );
+
+  // const earnedDividends = useMemo(() => {
+  //   return calculationEarnDividends(selectedInvestment);
+  // }, [calculationEarnDividends, selectedInvestment]);
+  const earnedDividends = 0;
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -258,7 +312,9 @@ export default function InvestorDashboard() {
                                       numberOfNft
                                     ).toLocaleString()}
                                   </TableCell>
-                                  <TableCell>$ 500 (Dividend Earn)</TableCell>
+                                  <TableCell>
+                                    $ {calculationEarnDividends(round)}
+                                  </TableCell>
                                   <TableCell>
                                     <Badge
                                       className={
@@ -267,7 +323,7 @@ export default function InvestorDashboard() {
                                           : "bg-blue-100 text-blue-700 border border-blue-200"
                                       }
                                     >
-                                      {round.status}
+                                      {statusMapping[round.status]}
                                     </Badge>
                                   </TableCell>
                                   <TableCell>
@@ -287,7 +343,9 @@ export default function InvestorDashboard() {
                                     <Button
                                       size="sm"
                                       variant="outline"
-                                      // onClick={() => handleViewDetail(investment)}
+                                      onClick={() =>
+                                        handleViewDetail(round.roundId)
+                                      }
                                     >
                                       <Eye className="mr-1 h-4 w-4" />
                                       View Detail
@@ -388,36 +446,42 @@ export default function InvestorDashboard() {
                   <div>
                     <p className="text-gray-600">Round Name</p>
                     <p className="font-medium text-gray-900">
-                      {selectedInvestment.round?.name}
+                      {selectedInvestment.roundName}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-600">Status</p>
                     <Badge
                       className={
-                        selectedInvestment.round?.status === "Open"
+                        selectedInvestment.isActive == true
                           ? "bg-green-100 text-green-700 border border-green-200"
-                          : selectedInvestment.round?.status === "Closed"
+                          : selectedInvestment.isActive == false
                           ? "bg-orange-100 text-orange-700 border border-orange-200"
                           : "bg-blue-100 text-blue-700 border border-blue-200"
                       }
                     >
-                      {selectedInvestment.round?.status}
+                      {statusMapping[selectedInvestment.status]}
                     </Badge>
                   </div>
                   <div>
                     <p className="text-gray-600">Start Date</p>
                     <p className="font-medium text-gray-900">
                       {new Date(
-                        selectedInvestment.round?.startDate
+                        Number(selectedInvestment.closeDateInvestment) * 1000
                       ).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Reward Percentage</p>
+                    <p className="font-medium text-gray-900">
+                      {selectedInvestment.rewardPercentage}%
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-600">End Date</p>
                     <p className="font-medium text-gray-900">
                       {new Date(
-                        selectedInvestment.round?.roundEndDate
+                        Number(selectedInvestment.endDateInvestment) * 1000
                       ).toLocaleDateString()}
                     </p>
                   </div>
@@ -433,31 +497,31 @@ export default function InvestorDashboard() {
                   <div>
                     <p className="text-gray-600">Tokens Owned</p>
                     <p className="text-2xl font-bold text-primary">
-                      {selectedInvestment.tokensOwned}
+                      {calculateRoundTokenOwned(selectedInvestment)}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-600">Investment Amount</p>
                     <p className="text-2xl font-bold text-primary">
-                      ${selectedInvestment.investmentAmount.toLocaleString()}
+                      ${selectedInvestmentAmount}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-600">Dividends Earned</p>
                     <p className="text-lg font-semibold text-accent">
-                      ${selectedInvestment.dividendsEarned.toLocaleString()}
+                      ${earnedDividends}
                     </p>
                   </div>
                   <div>
                     <p className="text-gray-600">Investment Status</p>
                     <Badge
                       className={
-                        selectedInvestment.status === "Active"
+                        selectedInvestment.isActive === true
                           ? "bg-green-100 text-green-700 border border-green-200"
                           : "bg-blue-100 text-blue-700 border border-blue-200"
                       }
                     >
-                      {selectedInvestment.status}
+                      {selectedInvestmentAmount ? "Invested" : "No Investment"}
                     </Badge>
                   </div>
                 </div>
@@ -469,19 +533,21 @@ export default function InvestorDashboard() {
                   Reward Claim Status
                 </h4>
                 {(() => {
-                  const canClaim = isClaimable(selectedInvestment.roundId);
-                  const round = selectedInvestment.round;
-                  const roundCreationDate = new Date(round?.startDate);
-                  const sixMonthsLater = new Date(roundCreationDate);
-                  sixMonthsLater.setMonth(sixMonthsLater.getMonth() + 6);
-                  const currentDate = new Date();
-                  const daysUntilClaimable = Math.max(
-                    0,
-                    Math.ceil(
-                      (sixMonthsLater.getTime() - currentDate.getTime()) /
-                        (1000 * 60 * 60 * 24)
-                    )
+                  const canClaim = isClaimable(selectedInvestment);
+                  const round = selectedInvestment;
+                  const roundCreationDate = dayjs(
+                    Number(round?.closeDateInvestment) * 1000
                   );
+                  const sixMonthsLater = dayjs(roundCreationDate).add(
+                    180,
+                    "days"
+                  );
+                  const currentDate = dayjs();
+                  const diff =
+                    sixMonthsLater.diff(currentDate, "days") > 180
+                      ? 180
+                      : sixMonthsLater.diff(currentDate, "days");
+                  const daysUntilClaimable = Math.max(0, diff);
 
                   return (
                     <div className="space-y-3">
@@ -502,7 +568,7 @@ export default function InvestorDashboard() {
                       {!canClaim && (
                         <p className="text-xs text-gray-600">
                           Rewards can be claimed 6 months after round creation (
-                          {sixMonthsLater.toLocaleDateString()})
+                          {sixMonthsLater.format("DD/MM/YYYY")}).
                         </p>
                       )}
                     </div>
@@ -519,7 +585,7 @@ export default function InvestorDashboard() {
             >
               Close
             </Button>
-            {selectedInvestment && isClaimable(selectedInvestment.roundId) && (
+            {selectedInvestment && isClaimable(selectedInvestment) && (
               <Button
                 // onClick={() => handleClaimReward(selectedInvestment.roundId)}
                 className="bg-accent hover:bg-accent/90"
