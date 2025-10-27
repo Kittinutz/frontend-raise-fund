@@ -44,7 +44,6 @@ import {
   Eye,
   Clock,
 } from "lucide-react";
-import { toast } from "sonner";
 import { useWallet } from "@/contexts/WalletProvider";
 import useFundingContract from "@/hooks/useFundingContract";
 import {
@@ -54,8 +53,6 @@ import {
 } from "@/types/fundingContract";
 import { formatEther } from "viem";
 import dayjs from "dayjs";
-import { format } from "path";
-import { ro } from "react-day-picker/locale";
 
 export default function InvestorDashboard() {
   const { isConnected } = useWallet();

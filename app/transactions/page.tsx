@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -23,7 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { nfts, investmentRounds } from "@/lib/mockData";
+import { investmentRounds } from "@/lib/mockData";
 import {
   Wallet,
   Lock,
@@ -39,6 +39,23 @@ import {
 import { toast } from "sonner";
 import useFundingContract from "@/hooks/useFundingContract";
 import flattenDeep from "lodash/flattenDeep";
+import { InvestmentRound, InvestmentRoundNFT } from "@/types/fundingContract";
+import dayjs from "dayjs";
+import { formatEther } from "viem";
+
+// Interface for display data that matches UI expectations
+interface DisplayNFT {
+  tokenId: string;
+  roundId: string;
+  dividendStatus: "Paid" | "Unpaid" | "Pending";
+  dividendProgress: number;
+  totalDividendPercentage: number;
+  dividendDate?: string;
+  dividendAmount?: string;
+  transferStatus: "Locked" | "Tradable";
+  rewardPercentage: number;
+  tokenPrice: number;
+}
 export default function TransactionHistoryPage() {
   const [filterDividendStatus, setFilterDividendStatus] =
     useState<string>("all");
@@ -49,33 +66,94 @@ export default function TransactionHistoryPage() {
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roundDropdownRef = useRef<HTMLDivElement>(null);
   const { investorNftDetail } = useFundingContract();
+  const calculationEarnDividends = useCallback(
+    (round: InvestmentRound | null) => {
+      if (round === null) return "0";
+      const now = dayjs();
 
-  const nftsList = useMemo(() => {
-    return flattenDeep(investorNftDetail);
+      const percentage = Number(round.rewardPercentage);
+
+      const closeDateInvestment = dayjs(
+        Number(round.closeDateInvestment) * 1000
+      );
+
+      const diff = now.diff(closeDateInvestment, "days");
+
+      if (now.isBefore(closeDateInvestment)) {
+        return "0";
+      }
+
+      if (diff >= 365) {
+        return (
+          Number(formatEther(round.tokenPrice)) *
+          (percentage / 100)
+        ).toLocaleString();
+      } else {
+        const perDatePercentage = percentage / 365 / 100;
+        return (
+          Number(formatEther(round.tokenPrice)) *
+          perDatePercentage *
+          diff
+        ).toLocaleString("en-US", { maximumFractionDigits: 2 });
+      }
+    },
+    []
+  );
+  // Transform smart contract NFT data to display format
+  const transformNFTsForDisplay = useMemo(() => {
+    const flattenedNFTs = flattenDeep(investorNftDetail);
+
+    return flattenedNFTs.map(
+      (nft: InvestmentRoundNFT, index: number): DisplayNFT => {
+        // Generate mock dividend data based on NFT state
+        const hasDividends = nft.rewardClaimed;
+        const isHaveRedeem = nft.redeemed;
+        const isPending = !nft.redeemed && !nft.rewardClaimed;
+
+        return {
+          tokenId: `NFT-${nft.roundId.toString()}-${nft.tokenId}`,
+          roundId: nft.roundId.toString(),
+          dividendStatus: hasDividends
+            ? "Paid"
+            : isPending
+            ? "Pending"
+            : "Unpaid",
+          dividendProgress: isHaveRedeem ? 100 : hasDividends ? 50 : 0,
+          totalDividendPercentage: Number(nft.rewardPercentage),
+          dividendDate: dayjs(Number(nft.closeDateInvestment) * 1000)
+            .add(180, "day")
+            .format("DD MMM, YYYY"),
+          dividendAmount: calculationEarnDividends(nft),
+          transferStatus: nft.rewardClaimed ? "Locked" : "Tradable",
+          rewardPercentage: Number(nft.rewardPercentage),
+          tokenPrice: Number(nft.tokenPrice) / Math.pow(10, 18), // Convert from wei to ETH/USDT
+        };
+      }
+    );
   }, [investorNftDetail]);
 
-  const nftList =
-    // Close dropdown when clicking outside
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          statusDropdownRef.current &&
-          !statusDropdownRef.current.contains(event.target as Node)
-        ) {
-          setIsStatusDropdownOpen(false);
-        }
-        if (
-          roundDropdownRef.current &&
-          !roundDropdownRef.current.contains(event.target as Node)
-        ) {
-          setIsRoundDropdownOpen(false);
-        }
-      };
+  const nftsList = transformNFTsForDisplay;
 
-      document.addEventListener("mousedown", handleClickOutside);
-      return () =>
-        document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        statusDropdownRef.current &&
+        !statusDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsStatusDropdownOpen(false);
+      }
+      if (
+        roundDropdownRef.current &&
+        !roundDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsRoundDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const filteredTokens = nftsList.filter((token) => {
     if (
@@ -100,13 +178,17 @@ export default function TransactionHistoryPage() {
     { value: "Pending", label: "Pending", color: "text-accent" },
   ];
 
-  const roundOptions = [
-    { value: "all", label: "All Rounds" },
-    ...investmentRounds.map((round) => ({
-      value: round.id,
-      label: round.name,
-    })),
-  ];
+  // Generate round options from actual NFT data
+  const roundOptions = useMemo(() => {
+    const uniqueRounds = [...new Set(nftsList.map((nft) => nft.roundId))];
+    return [
+      { value: "all", label: "All Rounds" },
+      ...uniqueRounds.map((roundId) => ({
+        value: roundId,
+        label: `Round ${roundId}`,
+      })),
+    ];
+  }, [nftsList]);
 
   const getDividendStatusColor = (status: string) => {
     switch (status) {
@@ -125,9 +207,12 @@ export default function TransactionHistoryPage() {
     return status === "Locked" ? "bg-red-500" : "bg-green-500";
   };
 
-  const paidTokens = nfts.filter((t) => t.dividendStatus === "Paid").length;
-  const unpaidTokens = nfts.filter((t) => t.dividendStatus === "Unpaid").length;
-  const totalDividends = nfts
+  // Calculate statistics from transformed NFT data
+  const paidTokens = nftsList.filter((t) => t.dividendStatus === "Paid").length;
+  const unpaidTokens = nftsList.filter(
+    (t) => t.dividendStatus === "Unpaid"
+  ).length;
+  const totalDividends = nftsList
     .filter((t) => t.dividendStatus === "Paid")
     .reduce((sum, t) => sum + (t.dividendAmount || 0), 0);
 
@@ -172,7 +257,7 @@ export default function TransactionHistoryPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl text-primary">{nfts.length}</p>
+              <p className="text-3xl text-primary">{nftsList.length}</p>
               <p className="text-xs text-gray-500 mt-1">NFTs owned</p>
             </CardContent>
           </Card>
@@ -515,9 +600,7 @@ export default function TransactionHistoryPage() {
                           <TableCell>
                             {token.dividendDate ? (
                               <span className="text-sm">
-                                {new Date(
-                                  token.dividendDate
-                                ).toLocaleDateString()}
+                                {token.dividendDate}
                               </span>
                             ) : (
                               <span className="text-gray-400 text-sm">
@@ -653,7 +736,10 @@ export default function TransactionHistoryPage() {
                 <p className="text-sm">
                   <strong>Tradable Tokens:</strong>{" "}
                   <span className="text-primary">
-                    {nfts.filter((t) => t.transferStatus === "Tradable").length}
+                    {
+                      nftsList.filter((t) => t.transferStatus === "Tradable")
+                        .length
+                    }
                   </span>
                 </p>
                 <p className="text-sm text-gray-500">

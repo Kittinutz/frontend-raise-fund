@@ -31,6 +31,7 @@ export interface InterfaceRoundDetailPaginated {
 }
 export interface InvestmentRoundNFT extends InvestmentRound {
   redeemed: boolean;
+  tokenId: bigint;
   rewardClaimed: boolean;
 }
 export interface RoundNFtsDetail {
