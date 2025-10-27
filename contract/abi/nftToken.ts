@@ -941,6 +941,97 @@ export default [
         name: "walletAddress",
         type: "address",
       },
+      {
+        internalType: "uint256",
+        name: "roundId",
+        type: "uint256",
+      },
+    ],
+    name: "getTokenFromWalletByRoundId",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "tokenId",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "roundId",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "tokenPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "rewardPercentage",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalTokenOpenInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "purchaseTimestamp",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "closeDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "endDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "originalBuyer",
+            type: "address",
+          },
+          {
+            internalType: "bool",
+            name: "redeemed",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "rewardClaimed",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "transferLocked",
+            type: "bool",
+          },
+          {
+            internalType: "string",
+            name: "metadata",
+            type: "string",
+          },
+        ],
+        internalType: "struct DZNFT.InvestmentData[]",
+        name: "tokens",
+        type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "walletAddress",
+        type: "address",
+      },
     ],
     name: "getWalletNFTSummary",
     outputs: [
@@ -1538,6 +1629,95 @@ export default [
     name: "revokeRole",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "roundInvestmentTokens",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "roundId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "tokenPrice",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "rewardPercentage",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "totalTokenOpenInvestment",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "purchaseTimestamp",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "closeDateInvestment",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "endDateInvestment",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "originalBuyer",
+        type: "address",
+      },
+      {
+        internalType: "bool",
+        name: "redeemed",
+        type: "bool",
+      },
+      {
+        internalType: "bool",
+        name: "rewardClaimed",
+        type: "bool",
+      },
+      {
+        internalType: "bool",
+        name: "transferLocked",
+        type: "bool",
+      },
+      {
+        internalType: "string",
+        name: "metadata",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {

@@ -5,6 +5,7 @@ import Footer from "@/components/ui/footer";
 import { Header } from "@/components/Header";
 import { WalletProvider } from "@/contexts/WalletProvider";
 import { Theme } from "@radix-ui/themes";
+import { Toaster } from "@/components/ui/sonner";
 
 const anuphan = Anuphan({
   variable: "--font-anuphan-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({
             <Footer />
           </WalletProvider>
         </Theme>
+        <Toaster position="top-center" />
       </body>
     </html>
   );

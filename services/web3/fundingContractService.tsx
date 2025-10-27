@@ -3,6 +3,7 @@ import { publicClient } from "@/utils/client";
 import {
   InterfaceRoundDetailPaginated,
   InvestmentRound,
+  InvestmentRoundNFT,
   InvestorDashboard,
 } from "@/types/fundingContract";
 import { fetchNFtInfo } from "./nftContractService";
@@ -105,7 +106,7 @@ export const fetchUserDashboardData = async (
 export const fetchUserInvestedRounds = async (
   userAddress: `0x${string}`
 ): Promise<
-  | [bigint[], InvestmentRound[], bigint[][], InvestmentRound[][], boolean[]]
+  | [bigint[], InvestmentRound[], bigint[][], InvestmentRoundNFT[][], boolean[]]
   | undefined
 > => {
   try {
@@ -132,7 +133,7 @@ export const fetchUserInvestedRounds = async (
       roundIds as bigint[],
       roundDetail as InvestmentRound[],
       nfts as bigint[][],
-      nftDetail as InvestmentRound[][],
+      nftDetail as InvestmentRoundNFT[][],
       isEnableClaimReward as boolean[],
     ];
   } catch (e) {

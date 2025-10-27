@@ -32,6 +32,12 @@ const useFundingContract = () => {
   const [investorRounds, setInvestorRounds] = useState<InvestmentRound[]>([]);
   const [investorRoundIds, setInvestorRoundIds] = useState<bigint[]>([]);
   const [investorNftIds, setInvestorNftIds] = useState<bigint[][]>([]);
+  const [investorNftDetail, setInvestorNftDetail] = useState<
+    InvestmentRound[][]
+  >([]);
+  const [investorIsClaimableRounds, setInvestorIsClaimableRounds] = useState<
+    boolean[]
+  >([]);
   const contract = useMemo(() => {
     if (!walletClient) return null;
     return getClientConnectCrownFundingContract(walletClient);
@@ -83,12 +89,19 @@ const useFundingContract = () => {
         );
         setInvestorDashboard(dashboardData || null);
 
-        const [roundIds, rounds, nfts] = (await fetchUserInvestedRounds(
-          currentAddress as `0x${string}`
-        )) || [[], [], [[]]];
+        const [roundIds, rounds, nfts, nftDetail, isEnableClaimReward] =
+          (await fetchUserInvestedRounds(currentAddress as `0x${string}`)) || [
+            [],
+            [],
+            [[]],
+            [[]],
+            [],
+          ];
         setInvestorRoundIds(roundIds);
         setInvestorRounds(rounds);
         setInvestorNftIds(nfts);
+        setInvestorNftDetail(nftDetail);
+        setInvestorIsClaimableRounds(isEnableClaimReward);
       }
     }
     fetchInvestorDashboard();
@@ -122,6 +135,8 @@ const useFundingContract = () => {
     investorRounds,
     investorRoundIds,
     investorNftIds,
+    investorNftDetail,
+    investorIsClaimableRounds,
   };
 };
 

@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useMemo, useState } from "react";
+import { use, useCallback, useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -47,10 +47,15 @@ import {
 import { toast } from "sonner";
 import { useWallet } from "@/contexts/WalletProvider";
 import useFundingContract from "@/hooks/useFundingContract";
-import { InvestmentRound, statusMapping } from "@/types/fundingContract";
+import {
+  InvestmentRound,
+  InvestmentRoundNFT,
+  statusMapping,
+} from "@/types/fundingContract";
 import { formatEther } from "viem";
 import dayjs from "dayjs";
 import { format } from "path";
+import { ro } from "react-day-picker/locale";
 
 export default function InvestorDashboard() {
   const { isConnected } = useWallet();
@@ -59,8 +64,12 @@ export default function InvestorDashboard() {
     useState<InvestmentRound | null>(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const itemsPerPage = 5;
-  const { investorDashboard, investorRounds, investorNftIds } =
-    useFundingContract();
+  const {
+    investorDashboard,
+    investorRounds,
+    investorNftIds,
+    investorNftDetail,
+  } = useFundingContract();
 
   // Check if investment is claimable (6 months after round creation)
   const isClaimable = useCallback((round: InvestmentRound) => {
@@ -96,10 +105,6 @@ export default function InvestorDashboard() {
     [investorDashboard]
   );
 
-  const activeRounds = useMemo(
-    () => investorDashboard?.activeRounds || 0,
-    [investorDashboard]
-  );
   const handleViewDetail = (roundId: bigint) => {
     const round = investorRounds.find((r) => r.roundId === roundId);
     if (round) {
@@ -116,20 +121,47 @@ export default function InvestorDashboard() {
     ).toLocaleString();
   }, [selectedInvestment, investorNftIds]);
 
-  const calculateRoundTokenOwned = useCallback(
-    (selectedInvestment: InvestmentRound | null) => {
-      if (selectedInvestment === null) return 0;
-      return investorNftIds[Number(selectedInvestment.roundId)]?.length ?? 0;
+  const getInvestorNftDetail = useCallback(
+    (round: InvestmentRound | null): InvestmentRoundNFT[] => {
+      if (round === null) return [];
+
+      return investorNftDetail[Number(round.roundId)] ?? [];
     },
-    [investorNftIds]
+    [investorNftDetail]
+  );
+
+  const getClaimedStatusNFTInRound = useCallback(
+    (round: InvestmentRound | null) => {
+      if (round === null) return false;
+      const nfts = getInvestorNftDetail(round);
+      return nfts.every((nft) => nft.rewardClaimed === true);
+    },
+    [getInvestorNftDetail]
+  );
+
+  const getRedeemedStatusNFTInRound = useCallback(
+    (round: InvestmentRound | null) => {
+      if (round === null) return false;
+      const nfts = getInvestorNftDetail(round);
+      return nfts.every((nft) => nft.redeemed === true);
+    },
+    [getInvestorNftDetail]
+  );
+
+  const getNumberOfTokenOwnedInRound = useCallback(
+    (round: InvestmentRound | null) => {
+      if (round === null) return 0;
+      return getInvestorNftDetail(round)?.length || 0;
+    },
+    [getInvestorNftDetail]
   );
 
   const calculationEarnDividends = useCallback(
     (round: InvestmentRound | null) => {
-      const selectedRoundTokenOwned = calculateRoundTokenOwned(round);
+      const selectedRoundTokenOwned = getNumberOfTokenOwnedInRound(round);
       if (round === null) return "0";
-
       const now = dayjs();
+
       const percentage = Number(round.rewardPercentage);
 
       const closeDateInvestment = dayjs(
@@ -137,6 +169,7 @@ export default function InvestorDashboard() {
       );
 
       const diff = now.diff(closeDateInvestment, "days");
+      console.log("--->", { diff, selectedRoundTokenOwned });
 
       if (now.isBefore(closeDateInvestment)) {
         return "0";
@@ -158,13 +191,13 @@ export default function InvestorDashboard() {
         ).toLocaleString("en-US", { maximumFractionDigits: 2 });
       }
     },
-    [calculateRoundTokenOwned]
+    [getNumberOfTokenOwnedInRound]
   );
 
-  // const earnedDividends = useMemo(() => {
-  //   return calculationEarnDividends(selectedInvestment);
-  // }, [calculationEarnDividends, selectedInvestment]);
-  const earnedDividends = 0;
+  const earnedDividends = useMemo(() => {
+    return calculationEarnDividends(selectedInvestment);
+  }, [calculationEarnDividends, selectedInvestment]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -497,7 +530,7 @@ export default function InvestorDashboard() {
                   <div>
                     <p className="text-gray-600">Tokens Owned</p>
                     <p className="text-2xl font-bold text-primary">
-                      {calculateRoundTokenOwned(selectedInvestment)}
+                      {getNumberOfTokenOwnedInRound(selectedInvestment)}
                     </p>
                   </div>
                   <div>

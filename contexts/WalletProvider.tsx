@@ -8,7 +8,7 @@ import React, {
   useState,
   ReactNode,
 } from "react";
-import { createWalletClient, custom, publicActions, WalletClient } from "viem";
+import { WalletClient } from "viem";
 import { foundry } from "viem/chains";
 import { createWalletClientInstance } from "@/utils/client";
 import useUSDTokenContract from "@/hooks/useUSDTokenContract";
@@ -16,6 +16,7 @@ import useUSDTokenContract from "@/hooks/useUSDTokenContract";
 // Add a type declaration for window.ethereum
 declare global {
   interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ethereum?: any;
   }
 }
@@ -91,6 +92,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
         localStorage.setItem("walletAddress", accounts[0]);
       }
       await walletClient?.addChain({ chain: foundry });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Failed to connect wallet:", err);
       setError(err.message || "Failed to connect wallet");
@@ -127,6 +129,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
       // Clear localStorage
       localStorage.removeItem("walletConnected");
       localStorage.removeItem("walletAddress");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error("Failed to disconnect wallet:", err);
       setError(err.message || "Failed to disconnect wallet");
