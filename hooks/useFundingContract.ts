@@ -7,7 +7,11 @@ import {
 } from "@/services/web3/fundingContractService";
 import { useWallet } from "@/contexts/WalletProvider";
 import getClientConnectCrownFundingContract from "@/contract/fundingContract";
-import { InvestmentRound, InvestorDashboard } from "@/types/fundingContract";
+import {
+  InvestmentRound,
+  InvestmentRoundNFT,
+  InvestorDashboard,
+} from "@/types/fundingContract";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { foundry } from "viem/chains";
 import { publicClient } from "@/utils/client";
@@ -33,7 +37,7 @@ const useFundingContract = () => {
   const [investorRoundIds, setInvestorRoundIds] = useState<bigint[]>([]);
   const [investorNftIds, setInvestorNftIds] = useState<bigint[][]>([]);
   const [investorNftDetail, setInvestorNftDetail] = useState<
-    InvestmentRound[][]
+    InvestmentRoundNFT[][]
   >([]);
   const [investorIsClaimableRounds, setInvestorIsClaimableRounds] = useState<
     boolean[]

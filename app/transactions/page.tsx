@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -37,7 +37,8 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-
+import useFundingContract from "@/hooks/useFundingContract";
+import flattenDeep from "lodash/flattenDeep";
 export default function TransactionHistoryPage() {
   const [filterDividendStatus, setFilterDividendStatus] =
     useState<string>("all");
@@ -47,29 +48,36 @@ export default function TransactionHistoryPage() {
   const [isRoundDropdownOpen, setIsRoundDropdownOpen] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roundDropdownRef = useRef<HTMLDivElement>(null);
+  const { investorNftDetail } = useFundingContract();
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        statusDropdownRef.current &&
-        !statusDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsStatusDropdownOpen(false);
-      }
-      if (
-        roundDropdownRef.current &&
-        !roundDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsRoundDropdownOpen(false);
-      }
-    };
+  const nftsList = useMemo(() => {
+    return flattenDeep(investorNftDetail);
+  }, [investorNftDetail]);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  const nftList =
+    // Close dropdown when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          statusDropdownRef.current &&
+          !statusDropdownRef.current.contains(event.target as Node)
+        ) {
+          setIsStatusDropdownOpen(false);
+        }
+        if (
+          roundDropdownRef.current &&
+          !roundDropdownRef.current.contains(event.target as Node)
+        ) {
+          setIsRoundDropdownOpen(false);
+        }
+      };
 
-  const filteredTokens = nfts.filter((token) => {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+  const filteredTokens = nftsList.filter((token) => {
     if (
       filterDividendStatus !== "all" &&
       token.dividendStatus !== filterDividendStatus

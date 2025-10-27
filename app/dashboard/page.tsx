@@ -169,7 +169,6 @@ export default function InvestorDashboard() {
       );
 
       const diff = now.diff(closeDateInvestment, "days");
-      console.log("--->", { diff, selectedRoundTokenOwned });
 
       if (now.isBefore(closeDateInvestment)) {
         return "0";
