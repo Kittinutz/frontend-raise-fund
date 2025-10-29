@@ -1,44 +1,25 @@
 import { useWallet } from "@/contexts/WalletProvider";
-import getClientConnectTokenContract from "@/contract/nftContract";
+import { fetchBalanceOfNFTs } from "@/services/web3/NFTContractService";
 import { useEffect, useState } from "react";
-import { GetContractReturnType } from "viem";
 // Import Contract type if available
 
 const useFundingTokenContract = () => {
-  const { walletClient } = useWallet();
-  const [balance, setBalance] = useState<bigint | null>(null);
-  const [usdtOwner, setUsdtOwner] = useState<string | null>(null);
-  const tokenContract = getClientConnectTokenContract(walletClient!);
-
-  const getBalanceOff = async (address: `0x${string}`) => {
-    const balance = await tokenContract.read.balanceOf([address]);
-    return balance;
-  };
-  const getMyTokenBalance = async () => {
-    const address = await walletClient!.getAddresses();
-    if (address.length === 0) return 0;
-    const balance = await tokenContract?.read!.balanceOf([address[0]]);
-    return balance;
-  };
-
+  const { currentAddress } = useWallet();
+  const [nftBalance, setNftsBalances] = useState<bigint | number>(0);
   useEffect(() => {
-    const fetchCurrentWalletTokenBalance = async () => {
-      if (!tokenContract) return;
-      const address = await walletClient!.getAddresses();
-      if (address.length === 0) return;
-      const balance = await tokenContract.read.balanceOf([address[0]]);
-      setUsdtOwner("owner");
-      setBalance(balance);
+    const initialFetch = async () => {
+      try {
+        if (!currentAddress) return;
+        const nfts = await fetchBalanceOfNFTs(currentAddress as `0x${string}`);
+        setNftsBalances(nfts);
+      } catch (error) {
+        console.error("Error fetching funding token data:", error);
+      }
     };
-    fetchCurrentWalletTokenBalance();
-  }, [tokenContract, walletClient]);
-
+    initialFetch();
+  }, [currentAddress]);
   return {
-    balance,
-    tokenContract,
-    getBalanceOff,
-    getMyTokenBalance,
-    usdtOwner,
+    nftBalance,
   };
   // Your hook logic here
 };

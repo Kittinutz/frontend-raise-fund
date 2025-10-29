@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 
 import { ArrowLeft } from "lucide-react";
-import { fetchRoundByID } from "@/services/web3/fundingContractService";
+import { fetchRoundByID } from "@/services/web3/FundRaisingContractService";
 
 import RoundDetailInvestment from "@/components/RoundDetail/RoundDetailInvestment";
 import Link from "next/link";

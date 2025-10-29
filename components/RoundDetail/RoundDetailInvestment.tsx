@@ -36,7 +36,7 @@ import { useState } from "react";
 import { InvestmentRound } from "@/types/fundingContract";
 import { formatEther } from "viem";
 import { Progress } from "../ui/progress";
-import { fetchRoundByID } from "@/services/web3/fundingContractService";
+import { fetchRoundByID } from "@/services/web3/FundRaisingContractService";
 import { Separator } from "../ui/separator";
 import useFundingContract from "@/hooks/useFundingContract";
 

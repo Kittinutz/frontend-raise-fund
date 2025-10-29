@@ -25,18 +25,16 @@ import {
 } from "@/components/ui/tooltip";
 import { investmentRounds } from "@/lib/mockData";
 import {
-  Wallet,
   Lock,
   Unlock,
-  ExternalLink,
   CheckCircle2,
   Clock,
   ChevronDown,
   TrendingUp,
   Info,
   X,
+  ArrowUpDown,
 } from "lucide-react";
-import { toast } from "sonner";
 import useFundingContract from "@/hooks/useFundingContract";
 import flattenDeep from "lodash/flattenDeep";
 import { InvestmentRound, InvestmentRoundNFT } from "@/types/fundingContract";
@@ -60,11 +58,18 @@ export default function TransactionHistoryPage() {
   const [filterDividendStatus, setFilterDividendStatus] =
     useState<string>("all");
   const [filterRound, setFilterRound] = useState<string>("all");
-  const [walletConnected, setWalletConnected] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
   const [isRoundDropdownOpen, setIsRoundDropdownOpen] = useState(false);
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const [sortBy, setSortBy] = useState<"tokenId" | "roundId" | "dividendDate">(
+    "tokenId"
+  );
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
   const roundDropdownRef = useRef<HTMLDivElement>(null);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
   const { investorNftDetail } = useFundingContract();
   const calculationEarnDividends = useCallback(
     (round: InvestmentRound | null) => {
@@ -103,34 +108,33 @@ export default function TransactionHistoryPage() {
   const transformNFTsForDisplay = useMemo(() => {
     const flattenedNFTs = flattenDeep(investorNftDetail);
 
-    return flattenedNFTs.map(
-      (nft: InvestmentRoundNFT, index: number): DisplayNFT => {
-        // Generate mock dividend data based on NFT state
-        const hasDividends = nft.rewardClaimed;
-        const isHaveRedeem = nft.redeemed;
-        const isPending = !nft.redeemed && !nft.rewardClaimed;
+    return flattenedNFTs.map((nft: InvestmentRoundNFT): DisplayNFT => {
+      // Generate mock dividend data based on NFT state
+      const hasDividends = nft.rewardClaimed;
+      const isHaveRedeem = nft.redeemed;
+      const isPending = !nft.redeemed && !nft.rewardClaimed;
 
-        return {
-          tokenId: `NFT-${nft.roundId.toString()}-${nft.tokenId}`,
-          roundId: nft.roundId.toString(),
-          dividendStatus: hasDividends
+      return {
+        tokenId: `NFT-${nft.roundId.toString()}-${nft.tokenId}`,
+        roundId: nft.roundId.toString(),
+        dividendStatus:
+          hasDividends || isHaveRedeem
             ? "Paid"
             : isPending
             ? "Pending"
             : "Unpaid",
-          dividendProgress: isHaveRedeem ? 100 : hasDividends ? 50 : 0,
-          totalDividendPercentage: Number(nft.rewardPercentage),
-          dividendDate: dayjs(Number(nft.closeDateInvestment) * 1000)
-            .add(180, "day")
-            .format("DD MMM, YYYY"),
-          dividendAmount: calculationEarnDividends(nft),
-          transferStatus: nft.rewardClaimed ? "Locked" : "Tradable",
-          rewardPercentage: Number(nft.rewardPercentage),
-          tokenPrice: Number(nft.tokenPrice) / Math.pow(10, 18), // Convert from wei to ETH/USDT
-        };
-      }
-    );
-  }, [investorNftDetail]);
+        dividendProgress: isHaveRedeem ? 100 : hasDividends ? 50 : 0,
+        totalDividendPercentage: Number(nft.rewardPercentage),
+        dividendDate: dayjs(Number(nft.closeDateInvestment) * 1000)
+          .add(180, "day")
+          .format("DD MMM, YYYY"),
+        dividendAmount: calculationEarnDividends(nft),
+        transferStatus: nft.rewardClaimed ? "Locked" : "Tradable",
+        rewardPercentage: Number(nft.rewardPercentage),
+        tokenPrice: Number(formatEther(nft.tokenPrice)) as number,
+      };
+    });
+  }, [calculationEarnDividends, investorNftDetail]);
 
   const nftsList = transformNFTsForDisplay;
 
@@ -149,34 +153,88 @@ export default function TransactionHistoryPage() {
       ) {
         setIsRoundDropdownOpen(false);
       }
+      if (
+        sortDropdownRef.current &&
+        !sortDropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsSortDropdownOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredTokens = nftsList.filter((token) => {
-    if (
-      filterDividendStatus !== "all" &&
-      token.dividendStatus !== filterDividendStatus
-    )
-      return false;
-    if (filterRound !== "all" && token.roundId !== filterRound) return false;
-    return true;
-  });
+  const filteredTokens = useMemo(() => {
+    const filtered = nftsList.filter((token) => {
+      if (
+        filterDividendStatus !== "all" &&
+        token.dividendStatus !== filterDividendStatus
+      )
+        return false;
+      if (filterRound !== "all" && token.roundId !== filterRound) return false;
+      return true;
+    });
 
-  const handleConnectWallet = () => {
-    // Mock wallet connection
-    toast.success("Wallet connected successfully!");
-    setWalletConnected(true);
-  };
+    // Sort by selected criteria and order
+    filtered.sort((a, b) => {
+      let comparison = 0;
+
+      switch (sortBy) {
+        case "tokenId":
+          // Extract numeric part from tokenId for proper sorting (e.g., "NFT-1-123" -> 123)
+          const tokenIdA = parseInt(a.tokenId.split("-").pop() || "0");
+          const tokenIdB = parseInt(b.tokenId.split("-").pop() || "0");
+          comparison = tokenIdA - tokenIdB;
+          break;
+        case "roundId":
+          const roundA = parseInt(a.roundId);
+          const roundB = parseInt(b.roundId);
+          comparison = roundA - roundB;
+          break;
+        case "dividendDate":
+          const dateA = new Date(a.dividendDate || "").getTime();
+          const dateB = new Date(b.dividendDate || "").getTime();
+          comparison = dateA - dateB;
+          break;
+        default:
+          comparison = 0;
+      }
+
+      return sortOrder === "desc" ? -comparison : comparison;
+    });
+
+    return filtered;
+  }, [nftsList, filterDividendStatus, filterRound, sortBy, sortOrder]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredTokens.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTokens = filteredTokens.slice(startIndex, endIndex);
+
+  // Reset to first page when filters or sorting change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterDividendStatus, filterRound, sortBy, sortOrder]);
 
   const dividendStatusOptions = [
     { value: "all", label: "All Status", color: "text-gray-700" },
     { value: "Paid", label: "Paid", color: "text-green-600" },
-    { value: "Unpaid", label: "Unpaid", color: "text-gray-600" },
     { value: "Pending", label: "Pending", color: "text-accent" },
   ];
+
+  const sortOptions = [
+    { value: "tokenId", label: "Token ID" },
+    { value: "roundId", label: "Round" },
+    { value: "dividendDate", label: "Dividend Date" },
+  ] as const;
+
+  const getSortLabel = () => {
+    const option = sortOptions.find((opt) => opt.value === sortBy);
+    const orderLabel = sortOrder === "desc" ? "Latest" : "Oldest";
+    return `${option?.label} (${orderLabel} First)`;
+  };
 
   // Generate round options from actual NFT data
   const roundOptions = useMemo(() => {
@@ -193,18 +251,20 @@ export default function TransactionHistoryPage() {
   const getDividendStatusColor = (status: string) => {
     switch (status) {
       case "Paid":
-        return "bg-green-500";
+        return "bg-green-100 text-green-700 border border-green-200";
       case "Unpaid":
-        return "bg-gray-400";
+        return "bg-gray-100 text-gray-700 border border-gray-200";
       case "Pending":
-        return "bg-accent";
+        return "bg-orange-100 text-orange-700 border border-orange-200";
       default:
-        return "bg-gray-400";
+        return "bg-gray-100 text-gray-700 border border-gray-200";
     }
   };
 
   const getTransferStatusColor = (status: string) => {
-    return status === "Locked" ? "bg-red-500" : "bg-green-500";
+    return status === "Locked"
+      ? "bg-red-100 text-red-700 border border-red-200"
+      : "bg-green-100 text-green-700 border border-green-200";
   };
 
   // Calculate statistics from transformed NFT data
@@ -214,7 +274,7 @@ export default function TransactionHistoryPage() {
   ).length;
   const totalDividends = nftsList
     .filter((t) => t.dividendStatus === "Paid")
-    .reduce((sum, t) => sum + (t.dividendAmount || 0), 0);
+    .reduce((sum, t) => sum + (Number(t.dividendAmount) || 0), 0);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -230,18 +290,6 @@ export default function TransactionHistoryPage() {
                 Track your token holdings and dividend payments
               </p>
             </div>
-            <Button
-              onClick={handleConnectWallet}
-              className={`${
-                walletConnected
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-card-header hover:bg-card-header/90"
-              }`}
-              size="lg"
-            >
-              <Wallet className="mr-2 h-5 w-5" />
-              {walletConnected ? "Wallet Connected" : "Connect Wallet"}
-            </Button>
           </div>
         </div>
 
@@ -348,6 +396,7 @@ export default function TransactionHistoryPage() {
                 onClick={() => {
                   setIsStatusDropdownOpen(!isStatusDropdownOpen);
                   setIsRoundDropdownOpen(false);
+                  setIsSortDropdownOpen(false);
                 }}
                 className="group relative inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg hover:border-primary/40 transition-all duration-200 cursor-pointer"
               >
@@ -425,6 +474,7 @@ export default function TransactionHistoryPage() {
                 onClick={() => {
                   setIsRoundDropdownOpen(!isRoundDropdownOpen);
                   setIsStatusDropdownOpen(false);
+                  setIsSortDropdownOpen(false);
                 }}
                 className="group relative inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg hover:border-primary/40 transition-all duration-200 cursor-pointer"
               >
@@ -476,17 +526,105 @@ export default function TransactionHistoryPage() {
               )}
             </div>
 
+            {/* Sort Filter */}
+            <div className="relative" ref={sortDropdownRef}>
+              <button
+                onClick={() => {
+                  setIsSortDropdownOpen(!isSortDropdownOpen);
+                  setIsStatusDropdownOpen(false);
+                  setIsRoundDropdownOpen(false);
+                }}
+                className="group relative inline-flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-gray-200 rounded-lg hover:border-primary/40 transition-all duration-200 cursor-pointer"
+              >
+                <ArrowUpDown className="h-4 w-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">
+                  Sort by:{" "}
+                  <span className="text-gray-900">{getSortLabel()}</span>
+                </span>
+                <ChevronDown
+                  className={`h-4 w-4 text-gray-500 transition-transform duration-300 ${
+                    isSortDropdownOpen ? "rotate-180" : "rotate-0"
+                  }`}
+                />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isSortDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-lg z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                  {sortOptions.map((option) => (
+                    <div key={option.value}>
+                      <button
+                        onClick={() => {
+                          setSortBy(option.value);
+                          setSortOrder("desc");
+                          setIsSortDropdownOpen(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm transition-colors duration-150 hover:bg-primary/5 flex items-center justify-between ${
+                          sortBy === option.value && sortOrder === "desc"
+                            ? "bg-primary/10 text-primary"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        <span
+                          className={
+                            sortBy === option.value && sortOrder === "desc"
+                              ? "font-medium"
+                              : ""
+                          }
+                        >
+                          {option.label} (Latest First)
+                        </span>
+                        {sortBy === option.value && sortOrder === "desc" && (
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSortBy(option.value);
+                          setSortOrder("asc");
+                          setIsSortDropdownOpen(false);
+                        }}
+                        className={`w-full px-4 py-3 text-left text-sm transition-colors duration-150 hover:bg-primary/5 flex items-center justify-between border-t border-gray-100 ${
+                          sortBy === option.value && sortOrder === "asc"
+                            ? "bg-primary/10 text-primary"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        <span
+                          className={
+                            sortBy === option.value && sortOrder === "asc"
+                              ? "font-medium"
+                              : ""
+                          }
+                        >
+                          {option.label} (Oldest First)
+                        </span>
+                        {sortBy === option.value && sortOrder === "asc" && (
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
+                        )}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             {/* Clear All Filters Button */}
-            {(filterDividendStatus !== "all" || filterRound !== "all") && (
+            {(filterDividendStatus !== "all" ||
+              filterRound !== "all" ||
+              sortBy !== "tokenId" ||
+              sortOrder !== "desc") && (
               <button
                 onClick={() => {
                   setFilterDividendStatus("all");
                   setFilterRound("all");
+                  setSortBy("tokenId");
+                  setSortOrder("desc");
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2.5 border-2 border-gray-300 hover:border-red-400 hover:bg-red-50 hover:text-red-600 text-gray-700 rounded-lg transition-all duration-200 cursor-pointer"
               >
                 <X className="h-4 w-4" />
-                <span className="text-sm font-medium">Clear All Filters</span>
+                <span className="text-sm font-medium">Reset All</span>
               </button>
             )}
           </div>
@@ -497,168 +635,242 @@ export default function TransactionHistoryPage() {
           <CardHeader>
             <CardTitle>Token Holdings</CardTitle>
             <CardDescription>
-              {filteredTokens.length} token(s) found
+              {filteredTokens.length} token(s) found - Page {currentPage} of{" "}
+              {totalPages}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {filteredTokens.length > 0 ? (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-gray-50 border-b border-gray-200">
-                      <TableHead className="font-semibold">Token ID</TableHead>
-                      <TableHead className="font-semibold">Round</TableHead>
-                      <TableHead className="font-semibold">
-                        Dividend Progress
-                      </TableHead>
-                      <TableHead className="font-semibold">
-                        Dividend Status
-                      </TableHead>
-                      <TableHead className="font-semibold">
-                        Dividend Date
-                      </TableHead>
-                      <TableHead className="font-semibold">
-                        Dividend Amount
-                      </TableHead>
-                      <TableHead className="font-semibold">
-                        Transfer Status
-                      </TableHead>
-                      <TableHead className="font-semibold">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTokens.map((token) => {
-                      const round = investmentRounds.find(
-                        (r) => r.id === token.roundId
-                      );
-                      const isLocked = token.transferStatus === "Locked";
+              <>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-gray-50 border-b border-gray-200">
+                        <TableHead className="font-semibold">
+                          Token ID
+                        </TableHead>
+                        <TableHead className="font-semibold">Round</TableHead>
+                        <TableHead className="font-semibold">
+                          Dividend Progress
+                        </TableHead>
+                        <TableHead className="font-semibold">
+                          Dividend Status
+                        </TableHead>
+                        <TableHead className="font-semibold">
+                          Dividend Date
+                        </TableHead>
+                        <TableHead className="font-semibold">
+                          Dividend Amount
+                        </TableHead>
+                        <TableHead className="font-semibold">
+                          Transfer Status
+                        </TableHead>
+                        <TableHead className="font-semibold">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedTokens.map((token) => {
+                        const round = investmentRounds.find(
+                          (r) => r.id === token.roundId
+                        );
+                        const isLocked = token.transferStatus === "Locked";
 
-                      const progressPercentage =
-                        (token.dividendProgress /
-                          token.totalDividendPercentage) *
-                        100;
+                        const progressPercentage =
+                          (token.dividendProgress /
+                            token.totalDividendPercentage) *
+                          100;
 
-                      return (
-                        <TableRow
-                          key={token.tokenId}
-                          className={`hover:bg-gray-50 transition-colors border-b border-gray-200 ${
-                            isLocked ? "bg-red-50/30" : ""
-                          }`}
-                        >
-                          <TableCell>
-                            <button className="font-mono text-primary hover:underline">
-                              {token.tokenId}
-                            </button>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm">
-                              {round?.name || "N/A"}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-2">
-                              <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-600">
-                                  {token.dividendProgress}% /{" "}
-                                  {token.totalDividendPercentage}%
-                                </span>
-                                <span className="font-medium text-gray-900">
-                                  {progressPercentage.toFixed(0)}%
-                                </span>
-                              </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full transition-all duration-300 ${
-                                    progressPercentage === 100
-                                      ? "bg-green-500"
-                                      : progressPercentage > 0
-                                      ? "bg-primary"
-                                      : "bg-gray-300"
-                                  }`}
-                                  style={{ width: `${progressPercentage}%` }}
-                                />
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Badge
-                                className={getDividendStatusColor(
-                                  token.dividendStatus
-                                )}
-                              >
-                                {token.dividendStatus === "Paid" && (
-                                  <CheckCircle2 className="mr-1 h-3 w-3" />
-                                )}
-                                {token.dividendStatus === "Pending" && (
-                                  <Clock className="mr-1 h-3 w-3" />
-                                )}
-                                {token.dividendStatus}
-                              </Badge>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {token.dividendDate ? (
+                        return (
+                          <TableRow
+                            key={token.tokenId}
+                            className={`hover:bg-gray-50 transition-colors border-b border-gray-200 ${
+                              isLocked ? "bg-red-50/30" : ""
+                            }`}
+                          >
+                            <TableCell>
+                              <button className="font-mono text-primary hover:underline">
+                                {token.tokenId}
+                              </button>
+                            </TableCell>
+                            <TableCell>
                               <span className="text-sm">
-                                {token.dividendDate}
+                                {round?.name || "N/A"}
                               </span>
-                            ) : (
-                              <span className="text-gray-400 text-sm">
-                                Not scheduled
-                              </span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            {token.dividendAmount ? (
-                              <span className="text-green-600">
-                                ${token.dividendAmount.toLocaleString()} USDT
-                              </span>
-                            ) : (
-                              <span className="text-gray-400">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <Badge
-                                    className={`${getTransferStatusColor(
-                                      token.transferStatus
-                                    )} flex items-center gap-1`}
-                                  >
-                                    {token.transferStatus === "Locked" ? (
-                                      <Lock className="h-3 w-3" />
-                                    ) : (
-                                      <Unlock className="h-3 w-3" />
-                                    )}
-                                    {token.transferStatus}
-                                  </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent className="max-w-xs">
-                                  <p className="text-sm">
-                                    {token.transferStatus === "Locked"
-                                      ? "This token is locked because dividends have been paid. It cannot be sold or transferred."
-                                      : "This token can be traded on the marketplace until dividends are paid."}
-                                  </p>
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="hover:bg-primary/10 hover:text-primary hover:border-primary transition-all duration-200"
-                            >
-                              View Details
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="text-gray-600">
+                                    {token.dividendProgress}% /{" "}
+                                    {token.totalDividendPercentage}%
+                                  </span>
+                                  <span className="font-medium text-gray-900">
+                                    {progressPercentage.toFixed(0)}%
+                                  </span>
+                                </div>
+                                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-300 ${
+                                      progressPercentage === 100
+                                        ? "bg-green-500"
+                                        : progressPercentage > 0
+                                        ? "bg-primary"
+                                        : "bg-gray-300"
+                                    }`}
+                                    style={{ width: `${progressPercentage}%` }}
+                                  />
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Badge
+                                  className={getDividendStatusColor(
+                                    token.dividendStatus
+                                  )}
+                                >
+                                  {token.dividendStatus === "Paid" && (
+                                    <CheckCircle2 className="mr-1 h-3 w-3" />
+                                  )}
+                                  {token.dividendStatus === "Pending" && (
+                                    <Clock className="mr-1 h-3 w-3" />
+                                  )}
+                                  {token.dividendStatus}
+                                </Badge>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {token.dividendDate ? (
+                                <span className="text-sm">
+                                  {token.dividendDate}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 text-sm">
+                                  Not scheduled
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {token.dividendAmount ? (
+                                <span className="text-green-600">
+                                  ${token.dividendAmount.toLocaleString()} USDT
+                                </span>
+                              ) : (
+                                <span className="text-gray-400">—</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Badge
+                                      className={`${getTransferStatusColor(
+                                        token.transferStatus
+                                      )} flex items-center gap-1`}
+                                    >
+                                      {token.transferStatus === "Locked" ? (
+                                        <Lock className="h-3 w-3" />
+                                      ) : (
+                                        <Unlock className="h-3 w-3" />
+                                      )}
+                                      {token.transferStatus}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="max-w-xs">
+                                    <p className="text-sm">
+                                      {token.transferStatus === "Locked"
+                                        ? "This token is locked because dividends have been paid. It cannot be sold or transferred."
+                                        : "This token can be traded on the marketplace until dividends are paid."}
+                                    </p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="hover:bg-primary/10 hover:text-primary hover:border-primary transition-all duration-200"
+                              >
+                                View Details
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                    <div className="text-sm text-gray-600">
+                      Showing {startIndex + 1} to{" "}
+                      {Math.min(endIndex, filteredTokens.length)} of{" "}
+                      {filteredTokens.length} tokens
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setCurrentPage((prev) => Math.max(prev - 1, 1))
+                        }
+                        disabled={currentPage === 1}
+                        className="disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </Button>
+
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1)
+                          .filter((page) => {
+                            const distance = Math.abs(page - currentPage);
+                            return (
+                              distance <= 2 || page === 1 || page === totalPages
+                            );
+                          })
+                          .map((page, index, array) => (
+                            <div key={page} className="flex items-center">
+                              {index > 0 && array[index - 1] !== page - 1 && (
+                                <span className="px-2 text-gray-400">...</span>
+                              )}
+                              <Button
+                                variant={
+                                  currentPage === page ? "default" : "outline"
+                                }
+                                size="sm"
+                                onClick={() => setCurrentPage(page)}
+                                className={`min-w-[40px] ${
+                                  currentPage === page
+                                    ? "bg-primary text-white"
+                                    : "hover:bg-gray-100"
+                                }`}
+                              >
+                                {page}
+                              </Button>
+                            </div>
+                          ))}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setCurrentPage((prev) =>
+                            Math.min(prev + 1, totalPages)
+                          )
+                        }
+                        disabled={currentPage === totalPages}
+                        className="disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-12 text-gray-500">
                 <TrendingUp className="h-12 w-12 mx-auto mb-4 text-gray-400" />
@@ -668,6 +880,8 @@ export default function TransactionHistoryPage() {
                   onClick={() => {
                     setFilterDividendStatus("all");
                     setFilterRound("all");
+                    setSortBy("tokenId");
+                    setSortOrder("desc");
                   }}
                 >
                   Clear Filters
@@ -678,85 +892,6 @@ export default function TransactionHistoryPage() {
         </Card>
 
         {/* Blockchain Integration Section */}
-        <div className="mt-8 grid md:grid-cols-2 gap-6">
-          <Card className="border-2 border-card-header/20 bg-white rounded-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Wallet className="h-5 w-5 text-primary" />
-                Wallet Integration
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Connect your Web3 wallet to manage your tokens directly on the
-                blockchain.
-              </p>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Status:</span>
-                  <Badge
-                    className={walletConnected ? "bg-green-500" : "bg-gray-400"}
-                  >
-                    {walletConnected ? "Connected" : "Not Connected"}
-                  </Badge>
-                </div>
-                {walletConnected && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Address:</span>
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                      0x742...f0bEb
-                    </code>
-                  </div>
-                )}
-              </div>
-              {!walletConnected && (
-                <Button
-                  onClick={handleConnectWallet}
-                  className="w-full bg-card-header hover:bg-card-header/90"
-                >
-                  <Wallet className="mr-2 h-4 w-4" />
-                  Connect MetaMask
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card className="border-2 border-accent/20 bg-white rounded-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ExternalLink className="h-5 w-5 text-primary" />
-                Marketplace Access
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Trade your tradable tokens on supported NFT marketplaces.
-              </p>
-              <div className="space-y-2">
-                <p className="text-sm">
-                  <strong>Tradable Tokens:</strong>{" "}
-                  <span className="text-primary">
-                    {
-                      nftsList.filter((t) => t.transferStatus === "Tradable")
-                        .length
-                    }
-                  </span>
-                </p>
-                <p className="text-sm text-gray-500">
-                  Note: Locked tokens cannot be traded or transferred.
-                </p>
-              </div>
-              <Button
-                onClick={() => window.open("https://opensea.io/", "_blank")}
-                variant="outline"
-                className="w-full hover:bg-accent/10 hover:text-accent hover:border-accent"
-              >
-                <ExternalLink className="mr-2 h-4 w-4" />
-                Visit Marketplace
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );

@@ -1,4 +1,3 @@
-import getClientConnectCrownFundingContract from "@/contract/fundingContract";
 import { publicClient } from "@/utils/client";
 import {
   InterfaceRoundDetailPaginated,
@@ -6,11 +5,17 @@ import {
   InvestmentRoundNFT,
   InvestorDashboard,
 } from "@/types/fundingContract";
-import { fetchNFtInfo } from "./nftContractService";
-const contractInstance = getClientConnectCrownFundingContract(publicClient);
+import {
+  getAnalyticsContract,
+  getCoreFundRaisingContract,
+} from "@/contract/contracts";
+import { fetchBalanceOfNFTs, fetchNFtInfo } from "./NFTContractService";
+const analytic = getAnalyticsContract(publicClient);
+const core = getCoreFundRaisingContract(publicClient);
+
 export const fetchTotalRounds = async () => {
   try {
-    return await contractInstance.read.totalRoundsCreated();
+    return await core.read.totalRoundsCreated();
   } catch (error) {
     console.error("Error fetching total rounds:", error);
   }
@@ -21,7 +26,7 @@ export const fetchAllRoundsDetailPaginated = async ({
   limit = 0,
 }: InterfaceRoundDetailPaginated) => {
   try {
-    const [totalRounds] = await contractInstance.read.getRoundsCount();
+    const [totalRounds] = await analytic.read.getRoundsCount();
     const totalCount = Number(totalRounds); // Convert BigInt to number
 
     if (totalCount === 0) return [];
@@ -33,7 +38,7 @@ export const fetchAllRoundsDetailPaginated = async ({
 
     const rounds = [];
     for (let i = start; i >= end; i--) {
-      const round = await contractInstance.read.investmentRounds([BigInt(i)]);
+      const round = await core.read.investmentRounds([BigInt(i)]);
       rounds.push({
         roundId: round[0],
         roundName: round[1],
@@ -57,16 +62,6 @@ export const fetchAllRoundsDetailPaginated = async ({
   }
 };
 
-export const fetchCurrentRoundId = async () => {
-  try {
-    const currentRoundId = await contractInstance.read.totalRoundsCreated();
-    return currentRoundId;
-  } catch (error) {
-    console.error("Error fetching current round ID:", error);
-    return undefined;
-  }
-};
-
 export const fetchRoundByID = async (
   roundId: bigint
 ): Promise<
@@ -74,10 +69,29 @@ export const fetchRoundByID = async (
 > => {
   try {
     const [roundDetail, isEnableClaimReward] =
-      await contractInstance.read.getInvestmentRound([roundId]);
+      await analytic.read.getInvestmentRound([roundId]);
     return { ...roundDetail, isEnableClaimReward };
   } catch (e) {
     console.error("Error fetchRoundByID", e);
+    return undefined;
+  }
+};
+export const fetchFundingContractOwner = async () => {
+  try {
+    const ownerAddress = await core.read.owner();
+    return ownerAddress as `0x${string}`;
+  } catch (error) {
+    console.error("Error fetching contract owner:", error);
+    return undefined;
+  }
+};
+
+export const fetchTotalFundRaising = async () => {
+  try {
+    const totalFundRaising = await core.read.totalUSDTRaised();
+    return totalFundRaising;
+  } catch (error) {
+    console.error("Error fetching total fund raising:", error);
     return undefined;
   }
 };
@@ -86,15 +100,16 @@ export const fetchUserDashboardData = async (
   userAddress: `0x${string}`
 ): Promise<InvestorDashboard | undefined> => {
   try {
-    const dashboardData = await contractInstance.read.getInvestorDetail([
+    const [roundIds, rounds, nfts] = await analytic.read.getInvestorDetail([
       userAddress,
     ]);
+    const nftBalance = await fetchBalanceOfNFTs(userAddress);
     const transformedDashboardData: InvestorDashboard = {
-      totalTokensOwned: dashboardData[0],
-      nftTokenIds: dashboardData[1] as bigint[],
-      totalInvestedAmount: dashboardData[2],
-      totalDividendEarned: dashboardData[3],
-      activeRounds: dashboardData[4] as bigint[],
+      totalTokensOwned: Number(nftBalance ?? 0),
+      nftTokenIds: nfts as bigint[],
+      totalInvestedAmount: rounds[2],
+      totalDividendEarned: rounds[3],
+      activeRounds: rounds[4] as bigint[],
     };
     return transformedDashboardData;
   } catch (e) {
@@ -112,7 +127,7 @@ export const fetchUserInvestedRounds = async (
   try {
     const nftDetail: InvestmentRound[][] = [];
     const [roundIds, roundDetail, nfts, isEnableClaimReward] =
-      await contractInstance.read.getInvestorRounds([userAddress]);
+      await core.read.getInvestorRounds([userAddress]);
 
     for (let i = 0; i < roundIds.length; i++) {
       const nftDetailPromise = nfts[Number(roundIds[i])].map(

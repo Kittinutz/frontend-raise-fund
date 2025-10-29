@@ -114,7 +114,7 @@ export default function TabInvestmentForm({
   const isAllowed = useMemo(() => {
     return allowance == BigInt(tokenAmount) * BigInt(roundDetail!.tokenPrice);
   }, [allowance, roundDetail, tokenAmount]);
-  const tokenLimit = 80;
+  const tokenLimit = 50;
 
   // Calculate remaining tokens the user can purchase
   const remainingTokensForUser = useMemo(() => {

@@ -68,15 +68,21 @@ export default function InvestorDashboard() {
     investorNftDetail,
   } = useFundingContract();
 
-  // Check if investment is claimable (6 months after round creation)
-  const isClaimable = useCallback((round: InvestmentRound) => {
-    const roundCloseDateInvestment = dayjs(
-      Number(round.closeDateInvestment) * 1000
-    );
-    const sixMonthsLater = roundCloseDateInvestment.add(180, "day");
-    const currentDate = dayjs();
-    return currentDate.isAfter(sixMonthsLater);
+  const now = useMemo(() => {
+    return dayjs();
   }, []);
+
+  // Check if investment is claimable (6 months after round creation)
+  const isClaimable = useCallback(
+    (round: InvestmentRound) => {
+      const roundCloseDateInvestment = dayjs(
+        Number(round.closeDateInvestment) * 1000
+      );
+      const sixMonthsLater = roundCloseDateInvestment.add(180, "day");
+      return now.isAfter(sixMonthsLater);
+    },
+    [now]
+  );
 
   // Pagination logic
   const totalPages = 0;
@@ -126,7 +132,7 @@ export default function InvestorDashboard() {
     },
     [investorNftDetail]
   );
-
+  // TODO: Check if all NFTs are claimed
   const getClaimedStatusNFTInRound = useCallback(
     (round: InvestmentRound | null) => {
       if (round === null) return false;
@@ -135,7 +141,7 @@ export default function InvestorDashboard() {
     },
     [getInvestorNftDetail]
   );
-
+  // TODO: Check if all NFTs are Redeemed
   const getRedeemedStatusNFTInRound = useCallback(
     (round: InvestmentRound | null) => {
       if (round === null) return false;
@@ -157,7 +163,6 @@ export default function InvestorDashboard() {
     (round: InvestmentRound | null) => {
       const selectedRoundTokenOwned = getNumberOfTokenOwnedInRound(round);
       if (round === null) return "0";
-      const now = dayjs();
 
       const percentage = Number(round.rewardPercentage);
 
@@ -187,7 +192,7 @@ export default function InvestorDashboard() {
         ).toLocaleString("en-US", { maximumFractionDigits: 2 });
       }
     },
-    [getNumberOfTokenOwnedInRound]
+    [getNumberOfTokenOwnedInRound, now]
   );
 
   const earnedDividends = useMemo(() => {
@@ -571,7 +576,7 @@ export default function InvestorDashboard() {
                     180,
                     "days"
                   );
-                  const currentDate = dayjs();
+                  const currentDate = now;
                   const diff =
                     sixMonthsLater.diff(currentDate, "days") > 180
                       ? 180

@@ -26,6 +26,11 @@ export default [
     type: "error",
   },
   {
+    inputs: [],
+    name: "ERC721EnumerableForbiddenBatchMint",
+    type: "error",
+  },
+  {
     inputs: [
       {
         internalType: "address",
@@ -126,6 +131,22 @@ export default [
       },
     ],
     name: "ERC721NonexistentToken",
+    type: "error",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "index",
+        type: "uint256",
+      },
+    ],
+    name: "ERC721OutOfBoundsIndex",
     type: "error",
   },
   {
@@ -938,7 +959,7 @@ export default [
     inputs: [
       {
         internalType: "address",
-        name: "walletAddress",
+        name: "user",
         type: "address",
       },
       {
@@ -947,79 +968,12 @@ export default [
         type: "uint256",
       },
     ],
-    name: "getTokenFromWalletByRoundId",
+    name: "getUserNFTsByRound",
     outputs: [
       {
-        components: [
-          {
-            internalType: "uint256",
-            name: "tokenId",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "roundId",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "tokenPrice",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "rewardPercentage",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "totalTokenOpenInvestment",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "purchaseTimestamp",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "closeDateInvestment",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "endDateInvestment",
-            type: "uint256",
-          },
-          {
-            internalType: "address",
-            name: "originalBuyer",
-            type: "address",
-          },
-          {
-            internalType: "bool",
-            name: "redeemed",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "rewardClaimed",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "transferLocked",
-            type: "bool",
-          },
-          {
-            internalType: "string",
-            name: "metadata",
-            type: "string",
-          },
-        ],
-        internalType: "struct DZNFT.InvestmentData[]",
-        name: "tokens",
-        type: "tuple[]",
+        internalType: "uint256[]",
+        name: "tokenIds",
+        type: "uint256[]",
       },
     ],
     stateMutability: "view",
@@ -1635,95 +1589,6 @@ export default [
     inputs: [
       {
         internalType: "address",
-        name: "",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "roundInvestmentTokens",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "tokenId",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "roundId",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "tokenPrice",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "rewardPercentage",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "totalTokenOpenInvestment",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "purchaseTimestamp",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "closeDateInvestment",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "endDateInvestment",
-        type: "uint256",
-      },
-      {
-        internalType: "address",
-        name: "originalBuyer",
-        type: "address",
-      },
-      {
-        internalType: "bool",
-        name: "redeemed",
-        type: "bool",
-      },
-      {
-        internalType: "bool",
-        name: "rewardClaimed",
-        type: "bool",
-      },
-      {
-        internalType: "bool",
-        name: "transferLocked",
-        type: "bool",
-      },
-      {
-        internalType: "string",
-        name: "metadata",
-        type: "string",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
         name: "from",
         type: "address",
       },
@@ -1874,6 +1739,25 @@ export default [
     inputs: [
       {
         internalType: "uint256",
+        name: "index",
+        type: "uint256",
+      },
+    ],
+    name: "tokenByIndex",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
         name: "",
         type: "uint256",
       },
@@ -1884,6 +1768,30 @@ export default [
         internalType: "bool",
         name: "",
         type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "owner",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "index",
+        type: "uint256",
+      },
+    ],
+    name: "tokenOfOwnerByIndex",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -1903,6 +1811,19 @@ export default [
         internalType: "string",
         name: "",
         type: "string",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "totalSupply",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
       },
     ],
     stateMutability: "view",

@@ -10,6 +10,7 @@ import { Dialog, Text, TextField } from "@radix-ui/themes";
 import { Flex } from "@radix-ui/themes";
 import { DialogFooter } from "./ui/dialog";
 import { toast } from "sonner";
+import useFundingContract from "@/hooks/useFundingContract";
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -20,6 +21,7 @@ export function Header() {
     "/rounds": "rounds",
     "/dashboard": "dashboard",
     "/transactions": "transactions",
+    "/admin": "admin",
   };
   const currentPage = mapping[pathName as keyof typeof mapping] || "landing";
   const [isOpenDialogWallet, setIsOpenDialogWallet] = useState(false);
@@ -29,7 +31,7 @@ export function Header() {
     isConnected,
     currentAddress,
     usdtBalance,
-    walletClient,
+    isOwnerFundingContract,
   } = useWallet();
   const displayWallet = currentAddress
     ? `${currentAddress.slice(0, 6)}...${currentAddress.slice(-4)}`
@@ -98,6 +100,18 @@ export function Header() {
                   Transactions
                 </button>
               </Link>
+              {isOwnerFundingContract && (
+                <Link href="/admin">
+                  <button
+                    // onClick={() => onNavigate("transactions")}
+                    className={`transition-colors hover:text-primary ${
+                      currentPage === "admin" ? "text-primary" : "text-gray-600"
+                    }`}
+                  >
+                    Admin
+                  </button>
+                </Link>
+              )}
             </nav>
 
             {/* Desktop CTA */}
@@ -199,6 +213,20 @@ export function Header() {
                   Transactions
                 </button>
               </Link>
+              {isOwnerFundingContract && (
+                <Link href="/admin">
+                  <button
+                    // onClick={() => onNavigate("transactions")}
+                    className={`transition-colors hover:text-primary ${
+                      currentPage === "transactions"
+                        ? "text-primary"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    Admin
+                  </button>
+                </Link>
+              )}
               <Button
                 onClick={() => setIsOpenDialogWallet(true)}
                 className="bg-gray-200 w-full text-black hover:bg-gray-400"

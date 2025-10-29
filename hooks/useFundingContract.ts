@@ -4,7 +4,7 @@ import {
   fetchRoundByID,
   fetchUserDashboardData,
   fetchUserInvestedRounds,
-} from "@/services/web3/fundingContractService";
+} from "@/services/web3/FundRaisingContractService";
 import { useWallet } from "@/contexts/WalletProvider";
 import getClientConnectCrownFundingContract from "@/contract/fundingContract";
 import {
@@ -15,6 +15,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { foundry } from "viem/chains";
 import { publicClient } from "@/utils/client";
+import { fetchOwnerContract } from "@/services/web3/NFTContractService";
 
 const useFundingContract = () => {
   const { walletClient, currentAddress } = useWallet();
@@ -110,6 +111,7 @@ const useFundingContract = () => {
     }
     fetchInvestorDashboard();
   }, [currentAddress]);
+
   useEffect(() => {
     async function initialize() {
       const rounds = await fetchTotalRounds();

@@ -7,11 +7,13 @@ import React, {
   useEffect,
   useState,
   ReactNode,
+  useMemo,
 } from "react";
 import { WalletClient } from "viem";
 import { foundry } from "viem/chains";
 import { createWalletClientInstance } from "@/utils/client";
 import useUSDTokenContract from "@/hooks/useUSDTokenContract";
+import { fetchFundingContractOwner } from "@/services/web3/FundRaisingContractService";
 
 // Add a type declaration for window.ethereum
 declare global {
@@ -31,6 +33,7 @@ interface WalletContextType {
   disconnectWallet: () => Promise<void>;
   setCurrentAddress: (address: string | undefined) => void;
   usdtBalance: bigint | null;
+  isOwnerFundingContract: boolean;
 }
 
 interface WalletProviderProps {
@@ -46,6 +49,10 @@ export function WalletProvider({ children }: WalletProviderProps) {
   const [walletClient, setWalletClient] = useState<WalletClient | null>(null);
   const { usdtBalance } = useUSDTokenContract(walletClient!);
   // Initialize wallet client
+  const [fundingOwnerAddress, setFundingOwnerAddress] = useState<string | null>(
+    null
+  );
+
   const initializeWalletClient = useCallback(() => {
     if (typeof window === "undefined" || !window.ethereum) return null;
 
@@ -175,7 +182,14 @@ export function WalletProvider({ children }: WalletProviderProps) {
 
     checkExistingConnection();
   }, [initializeWalletClient]);
-
+  useEffect(() => {
+    async function fetchOwner() {
+      if (!currentAddress) return;
+      const ownerFundingContract = await fetchFundingContractOwner();
+      setFundingOwnerAddress(ownerFundingContract?.toLowerCase() as string);
+    }
+    fetchOwner();
+  }, [currentAddress]);
   // Listen for account changes
   useEffect(() => {
     if (!window.ethereum) return;
@@ -224,7 +238,9 @@ export function WalletProvider({ children }: WalletProviderProps) {
       initializeWalletClient();
     }
   }, [currentAddress, walletClient, initializeWalletClient]);
-
+  const isOwnerFundingContract = useMemo(() => {
+    return fundingOwnerAddress?.toLowerCase() === currentAddress?.toLowerCase();
+  }, [currentAddress, fundingOwnerAddress]);
   const value: WalletContextType = {
     walletClient,
     currentAddress,
@@ -234,7 +250,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     connectWallet,
     disconnectWallet,
     setCurrentAddress,
-
+    isOwnerFundingContract,
     usdtBalance,
   };
 

@@ -53,7 +53,7 @@ export interface InvestmentRound {
 }
 
 export interface InvestorDashboard {
-  totalTokensOwned: bigint;
+  totalTokensOwned: number;
   nftTokenIds: bigint[];
   totalInvestedAmount: bigint;
   totalDividendEarned: bigint;
