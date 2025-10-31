@@ -104,7 +104,7 @@ export const fetchUserDashboardData = async (
     const [tokenOwned, nftTokenIds, totalInvestment, dividendsEarned] =
       await analytic.read.getInvestorSummary([userAddress]);
     const transformedDashboardData: InvestorDashboard = {
-      totalTokensOwned: tokenOwned,
+      totalTokensOwned: tokenOwned as unknown as bigint[],
       nftTokenIds: nftTokenIds as bigint[],
       totalInvestedAmount: totalInvestment,
       totalDividendEarned: dividendsEarned,
@@ -119,7 +119,7 @@ export const fetchUserDashboardData = async (
 
 export const fetchInvestorInvestmentDetail = async (
   userAddress: `0x${string}`
-): Promise<InvestorInvestmentDetail> => {
+): Promise<InvestorInvestmentDetail | undefined> => {
   try {
     const fetchRoundIdsPromise = analytic.read.getInvestorRounds([userAddress]);
     const fetchRoundDetailPromise = analytic.read.getInvestorRoundsDetail([
@@ -135,13 +135,15 @@ export const fetchInvestorInvestmentDetail = async (
     const nftDetailGroupByRoundId = groupBy(nftDetails, (nft) =>
       nft.roundId.toString()
     );
-    console.log(nftDetails, nftDetailGroupByRoundId);
 
     return {
       roundIds: [...roundIds],
       roundDetail: [...roundDetail],
-      nfts: [...nftDetails],
-      nftDetail: nftDetailGroupByRoundId,
+      nfts: [...nftDetails] as unknown as InvestmentRoundNFT[],
+      nftDetail: nftDetailGroupByRoundId as unknown as Record<
+        string,
+        InvestmentRoundNFT[]
+      >,
     };
   } catch (e) {
     console.error("Error fetchInvestorDashboard", e);
