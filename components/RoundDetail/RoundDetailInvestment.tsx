@@ -32,13 +32,15 @@ import {
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { InvestmentRound } from "@/types/fundingContract";
 import { formatEther } from "viem";
 import { Progress } from "../ui/progress";
 import { fetchRoundByID } from "@/services/web3/FundRaisingContractService";
 import { Separator } from "../ui/separator";
 import useFundingContract from "@/hooks/useFundingContract";
+import { getStatusClaimable } from "@/lib/roundCalculation";
+import dayjs from "dayjs";
 
 export default function RoundDetailInvestment({
   initialRoundDetail,
@@ -50,7 +52,8 @@ export default function RoundDetailInvestment({
   const [roundDetail, setRoundDetail] = useState<
     (InvestmentRound & { isEnableClaimReward: boolean | undefined }) | undefined
   >(initialRoundDetail);
-  const { investorNftIds } = useFundingContract();
+  const { investorNftDetail, currentBlocktime, handleClaimReward } =
+    useFundingContract();
 
   const cows = cowsByRound[0] || [];
   const documents = documentsByRound[0] || [];
@@ -97,6 +100,32 @@ export default function RoundDetailInvestment({
       Number(roundDetail?.totalTokenOpenInvestment)) *
       100
   );
+
+  const now = useMemo(() => {
+    return dayjs(
+      currentBlocktime ? Number(currentBlocktime) * 1000 : Date.now()
+    );
+  }, [currentBlocktime]);
+
+  const calculationCliamable = useCallback(
+    (round: InvestmentRound) => {
+      return getStatusClaimable(round, now);
+    },
+    [now]
+  );
+  const isClaimable = useMemo(() => {
+    if (roundDetail) {
+      return calculationCliamable(roundDetail);
+    }
+    return false;
+  }, [calculationCliamable, roundDetail]);
+  const isAllRedeemed = useMemo(() => {
+    if (roundDetail && investorNftDetail[Number(roundDetail.roundId)]) {
+      const nftDetails = investorNftDetail[Number(roundDetail.roundId)];
+      return nftDetails.every((nft) => nft.redeemed === true);
+    }
+    return false;
+  }, [roundDetail, investorNftDetail]);
   return (
     <>
       <Card className="mb-8 border-2 border-card-header/20">
@@ -179,14 +208,15 @@ export default function RoundDetailInvestment({
             </div>
             <Progress value={investPercentage} className="h-3" />
           </div>
-          {investorNftIds[Number(roundDetail?.roundId)] &&
-            investorNftIds[Number(roundDetail?.roundId)].length > 0 && (
+          {investorNftDetail[Number(roundDetail?.roundId)] &&
+            investorNftDetail[Number(roundDetail?.roundId)].length > 0 && (
               <>
                 {" "}
                 <Separator className="my-4" />
                 <div className="space-y-2">
                   <Button
-                    disabled={!roundDetail?.isEnableClaimReward}
+                    onClick={() => handleClaimReward(roundDetail!.roundId)}
+                    disabled={!isClaimable || isAllRedeemed}
                     variant="secondary"
                     className="w-full h-12 text-base rounded-xl bg-accent hover:bg-accent/90 text-white disabled:bg-gray-200 disabled:text-gray-500"
                   >

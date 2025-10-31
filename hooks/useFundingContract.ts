@@ -3,10 +3,9 @@ import {
   fetchAllRoundsDetailPaginated,
   fetchRoundByID,
   fetchUserDashboardData,
-  fetchUserInvestedRounds,
+  fetchInvestorInvestmentDetail,
 } from "@/services/web3/FundRaisingContractService";
 import { useWallet } from "@/contexts/WalletProvider";
-import getClientConnectCrownFundingContract from "@/contract/fundingContract";
 import {
   InvestmentRound,
   InvestmentRoundNFT,
@@ -15,7 +14,10 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { foundry } from "viem/chains";
 import { publicClient } from "@/utils/client";
-import { fetchOwnerContract } from "@/services/web3/NFTContractService";
+import {
+  getClaimFundContract,
+  getCoreFundRaisingContract,
+} from "@/contract/contracts";
 
 const useFundingContract = () => {
   const { walletClient, currentAddress } = useWallet();
@@ -23,7 +25,7 @@ const useFundingContract = () => {
   const [selectedRound, setSelectedRound] = useState<InvestmentRound | null>(
     null
   );
-
+  const [currentBlocktime, setCurrentBlocktime] = useState<bigint | null>(null);
   const [selectedRoundId, setSelectedRoundId] = useState<bigint | null>(null);
   const [pagination, setPagination] = useState({
     offset: 0,
@@ -36,18 +38,47 @@ const useFundingContract = () => {
     useState<InvestorDashboard | null>(null);
   const [investorRounds, setInvestorRounds] = useState<InvestmentRound[]>([]);
   const [investorRoundIds, setInvestorRoundIds] = useState<bigint[]>([]);
-  const [investorNftIds, setInvestorNftIds] = useState<bigint[][]>([]);
+
   const [investorNftDetail, setInvestorNftDetail] = useState<
-    InvestmentRoundNFT[][]
-  >([]);
+    Record<string, InvestmentRoundNFT[]>
+  >({});
   const [investorIsClaimableRounds, setInvestorIsClaimableRounds] = useState<
     boolean[]
   >([]);
-  const contract = useMemo(() => {
+  const fundRaisingCoreContract = useMemo(() => {
     if (!walletClient) return null;
-    return getClientConnectCrownFundingContract(walletClient);
+    return getCoreFundRaisingContract(walletClient);
   }, [walletClient]);
 
+  const fundRaisingClaimContract = useMemo(() => {
+    if (!walletClient) return null;
+    return getClaimFundContract(walletClient);
+  }, [walletClient]);
+
+  const handleClaimReward = useCallback(
+    async (roundId: bigint) => {
+      if (!currentAddress) {
+        console.error("No wallet address available");
+        return;
+      }
+      const hash = await fundRaisingClaimContract?.write.claimRewardRound(
+        [BigInt(roundId)],
+        {
+          account: currentAddress as `0x${string}`,
+          chain: foundry,
+        }
+      );
+      if (hash) {
+        await publicClient.waitForTransactionReceipt({ hash });
+        const dashboardData = await fetchUserDashboardData(
+          currentAddress as `0x${string}`
+        );
+        setInvestorDashboard(dashboardData || null);
+      }
+      // Optionally, refresh user data after claiming reward
+    },
+    [currentAddress, fundRaisingClaimContract]
+  );
   const investRounds = useCallback(
     async (roundId: bigint, amount: bigint) => {
       if (!currentAddress) {
@@ -56,10 +87,13 @@ const useFundingContract = () => {
       }
 
       try {
-        const hash = await contract?.write.investInRound([roundId, amount], {
-          account: currentAddress as `0x${string}`,
-          chain: foundry,
-        });
+        const hash = await fundRaisingCoreContract?.write.investInRound(
+          [roundId, amount],
+          {
+            account: currentAddress as `0x${string}`,
+            chain: foundry,
+          }
+        );
         if (hash) {
           await publicClient.waitForTransactionReceipt({ hash });
         }
@@ -75,8 +109,25 @@ const useFundingContract = () => {
         console.error("Error investing in round:", e);
       }
     },
-    [contract, currentAddress, pagination]
+    [fundRaisingCoreContract, currentAddress, pagination]
   );
+  useEffect(() => {
+    const fetchBlockTime = async () => {
+      const blockTime = await publicClient.getBlock();
+      const intervale = setInterval(async () => {
+        const blockTime = await publicClient.getBlock();
+        if (blockTime.timestamp) {
+          setCurrentBlocktime(BigInt(blockTime.timestamp));
+        }
+      }, 1000 * 60);
+      if (blockTime.timestamp) {
+        setCurrentBlocktime(BigInt(blockTime.timestamp));
+      }
+      return () => clearInterval(intervale);
+    };
+    fetchBlockTime();
+  }, []);
+
   useEffect(() => {
     async function fetchRound() {
       if (selectedRoundId) {
@@ -86,30 +137,23 @@ const useFundingContract = () => {
     }
     fetchRound();
   }, [selectedRoundId]);
+
   useEffect(() => {
-    async function fetchInvestorDashboard() {
+    async function initialFetchInvestorDashboard() {
       if (currentAddress) {
         const dashboardData = await fetchUserDashboardData(
           currentAddress as `0x${string}`
         );
         setInvestorDashboard(dashboardData || null);
 
-        const [roundIds, rounds, nfts, nftDetail, isEnableClaimReward] =
-          (await fetchUserInvestedRounds(currentAddress as `0x${string}`)) || [
-            [],
-            [],
-            [[]],
-            [[]],
-            [],
-          ];
+        const { roundIds, roundDetail, nfts, nftDetail, isEnableClaimReward } =
+          await fetchInvestorInvestmentDetail(currentAddress as `0x${string}`);
         setInvestorRoundIds(roundIds);
-        setInvestorRounds(rounds);
-        setInvestorNftIds(nfts);
+        setInvestorRounds(roundDetail);
         setInvestorNftDetail(nftDetail);
-        setInvestorIsClaimableRounds(isEnableClaimReward);
       }
     }
-    fetchInvestorDashboard();
+    initialFetchInvestorDashboard();
   }, [currentAddress]);
 
   useEffect(() => {
@@ -119,30 +163,28 @@ const useFundingContract = () => {
         offset: pagination.offset,
         limit: pagination.limit,
       });
-      console.log({
-        roundListData,
-      });
+
       setRoundList(roundListData ?? []);
       setTotalRounds(rounds || null);
     }
     initialize();
   }, [pagination.limit, pagination.offset]);
-
   return {
     totalRounds,
     roundList,
     investRounds,
     selectedRound,
-    fundingContractAddress: contract?.address || null,
+    fundingContractAddress: fundRaisingCoreContract?.address || null,
     setSelectedRoundId,
     setPagination,
     pagination,
     investorDashboard,
     investorRounds,
     investorRoundIds,
-    investorNftIds,
     investorNftDetail,
     investorIsClaimableRounds,
+    currentBlocktime,
+    handleClaimReward,
   };
 };
 

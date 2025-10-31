@@ -41,12 +41,12 @@ export default function TabInvestmentForm({
     useWallet();
   const inputRef = useRef<HTMLInputElement>(null);
   const { handleApprove } = useUSDTokenContract(walletClient!);
-  const { investRounds, investorNftIds } = useFundingContract();
+  const { investRounds, investorNftDetail } = useFundingContract();
   const [allowance, setAllowance] = useState<bigint | undefined>();
   const isAuthorized = false;
   const currentInvestorTokenInRound = useMemo(() => {
-    return (investorNftIds[Number(roundDetail?.roundId)] ?? []).length;
-  }, [investorNftIds, roundDetail?.roundId]);
+    return (investorNftDetail[Number(roundDetail?.roundId)] ?? []).length;
+  }, [investorNftDetail, roundDetail?.roundId]);
 
   // const getStatusColor = (status: string) => {
   //   switch (status) {
@@ -74,7 +74,7 @@ export default function TabInvestmentForm({
 
   const handleAuthorize = useCallback(async () => {
     const recipient = await handleApprove(
-      process.env.NEXT_PUBLIC_FUNDRAISING_CONTRACT_ADDRESS as `0x${string}`,
+      process.env.NEXT_PUBLIC_FUND_RAISING_CORE as `0x${string}`,
       tokenAmount ? BigInt(tokenAmount) : 0n,
       BigInt(formatEther(roundDetail!.tokenPrice))
     );
@@ -82,8 +82,7 @@ export default function TabInvestmentForm({
       recipient,
     });
     const allowance = await fetchAllowance({
-      spender: process.env
-        .NEXT_PUBLIC_FUNDRAISING_CONTRACT_ADDRESS as `0x${string}`,
+      spender: process.env.NEXT_PUBLIC_FUND_RAISING_CORE as `0x${string}`,
       owner: currentAddress as `0x${string}`,
     });
 

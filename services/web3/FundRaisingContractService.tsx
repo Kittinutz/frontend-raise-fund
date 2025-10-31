@@ -4,12 +4,13 @@ import {
   InvestmentRound,
   InvestmentRoundNFT,
   InvestorDashboard,
+  InvestorInvestmentDetail,
 } from "@/types/fundingContract";
 import {
   getAnalyticsContract,
   getCoreFundRaisingContract,
 } from "@/contract/contracts";
-import { fetchBalanceOfNFTs, fetchNFtInfo } from "./NFTContractService";
+import { groupBy } from "lodash";
 const analytic = getAnalyticsContract(publicClient);
 const core = getCoreFundRaisingContract(publicClient);
 
@@ -100,16 +101,14 @@ export const fetchUserDashboardData = async (
   userAddress: `0x${string}`
 ): Promise<InvestorDashboard | undefined> => {
   try {
-    const [roundIds, rounds, nfts] = await analytic.read.getInvestorDetail([
-      userAddress,
-    ]);
-    const nftBalance = await fetchBalanceOfNFTs(userAddress);
+    const [tokenOwned, nftTokenIds, totalInvestment, dividendsEarned] =
+      await analytic.read.getInvestorSummary([userAddress]);
     const transformedDashboardData: InvestorDashboard = {
-      totalTokensOwned: Number(nftBalance ?? 0),
-      nftTokenIds: nfts as bigint[],
-      totalInvestedAmount: rounds[2],
-      totalDividendEarned: rounds[3],
-      activeRounds: rounds[4] as bigint[],
+      totalTokensOwned: tokenOwned,
+      nftTokenIds: nftTokenIds as bigint[],
+      totalInvestedAmount: totalInvestment,
+      totalDividendEarned: dividendsEarned,
+      activeRounds: [], // Add the missing property - you may need to fetch this data
     };
     return transformedDashboardData;
   } catch (e) {
@@ -118,41 +117,34 @@ export const fetchUserDashboardData = async (
   }
 };
 
-export const fetchUserInvestedRounds = async (
+export const fetchInvestorInvestmentDetail = async (
   userAddress: `0x${string}`
-): Promise<
-  | [bigint[], InvestmentRound[], bigint[][], InvestmentRoundNFT[][], boolean[]]
-  | undefined
-> => {
+): Promise<InvestorInvestmentDetail> => {
   try {
-    const nftDetail: InvestmentRound[][] = [];
-    const [roundIds, roundDetail, nfts, isEnableClaimReward] =
-      await core.read.getInvestorRounds([userAddress]);
+    const fetchRoundIdsPromise = analytic.read.getInvestorRounds([userAddress]);
+    const fetchRoundDetailPromise = analytic.read.getInvestorRoundsDetail([
+      userAddress,
+    ]);
+    const nftsPromise = analytic.read.getWalletTokensDetail([userAddress]);
 
-    for (let i = 0; i < roundIds.length; i++) {
-      const nftDetailPromise = nfts[Number(roundIds[i])].map(
-        (tokenId: bigint) => fetchNFtInfo(tokenId)
-      );
+    const [roundIds, roundDetail, [, nftDetails]] = await Promise.all([
+      fetchRoundIdsPromise,
+      fetchRoundDetailPromise,
+      nftsPromise,
+    ]);
+    const nftDetailGroupByRoundId = groupBy(nftDetails, (nft) =>
+      nft.roundId.toString()
+    );
+    console.log(nftDetails, nftDetailGroupByRoundId);
 
-      const nftDetailsForRound: InvestmentRound[] = (
-        await Promise.all(nftDetailPromise)
-      ).filter((detail): detail is InvestmentRound => detail !== undefined);
-
-      if (!nftDetail[Number(roundIds[i])]) {
-        nftDetail[Number(roundIds[i])] = [];
-      }
-
-      nftDetail[Number(roundIds[i])].push(...nftDetailsForRound);
-    }
-    return [
-      roundIds as bigint[],
-      roundDetail as InvestmentRound[],
-      nfts as bigint[][],
-      nftDetail as InvestmentRoundNFT[][],
-      isEnableClaimReward as boolean[],
-    ];
+    return {
+      roundIds: [...roundIds],
+      roundDetail: [...roundDetail],
+      nfts: [...nftDetails],
+      nftDetail: nftDetailGroupByRoundId,
+    };
   } catch (e) {
-    console.error("Error fetchUserInvestedRounds", e);
+    console.error("Error fetchInvestorDashboard", e);
     return undefined;
   }
 };

@@ -55,7 +55,7 @@ export function Header() {
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="hidden lg:flex items-center gap-6">
               <Link href="/">
                 <button
                   // onClick={() => onNavigate("landing")}
@@ -116,7 +116,7 @@ export function Header() {
 
             {/* Desktop CTA */}
             {isConnected ? (
-              <div className="hidden md:flex items-center gap-4">
+              <div className="hidden lg:flex items-center gap-4">
                 <p>USDT:</p>
                 <p className="font-bold">
                   {usdtBalance &&
@@ -131,7 +131,7 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <div className="hidden md:flex items-center gap-4">
+              <div className="hidden lg:flex items-center gap-4">
                 <Button
                   onClick={() => connectWallet()}
                   className="bg-primary hover:bg-primary/90"
@@ -141,7 +141,7 @@ export function Header() {
               </div>
             )}
             <button
-              className="md:hidden p-2"
+              className="lg:hidden p-2"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? (
@@ -154,7 +154,7 @@ export function Header() {
 
           {/* Mobile Navigation */}
           {mobileMenuOpen && (
-            <div className="md:hidden py-4 space-y-3 border-t">
+            <div className="lg:hidden py-4 space-y-3 border-t">
               <button
                 onClick={() => {
                   // onNavigate("landing");
@@ -217,9 +217,9 @@ export function Header() {
                 <Link href="/admin">
                   <button
                     // onClick={() => onNavigate("transactions")}
-                    className={`transition-colors hover:text-primary ${
-                      currentPage === "transactions"
-                        ? "text-primary"
+                    className={`block w-full text-left px-4 py-2 transition-colors ${
+                      currentPage === "admin"
+                        ? "text-primary bg-primary/10"
                         : "text-gray-600"
                     }`}
                   >

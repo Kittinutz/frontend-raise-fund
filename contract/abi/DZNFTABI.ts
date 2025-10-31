@@ -570,6 +570,97 @@ export default [
     inputs: [
       {
         internalType: "address",
+        name: "walletAddress",
+        type: "address",
+      },
+    ],
+    name: "_getWalletTokensDetail",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "tokenIds",
+        type: "uint256[]",
+      },
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "tokenId",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "roundId",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "tokenPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "rewardPercentage",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalTokenOpenInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "purchaseTimestamp",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "closeDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "endDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "originalBuyer",
+            type: "address",
+          },
+          {
+            internalType: "bool",
+            name: "redeemed",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "rewardClaimed",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "transferLocked",
+            type: "bool",
+          },
+          {
+            internalType: "string",
+            name: "metadata",
+            type: "string",
+          },
+        ],
+        internalType: "struct DZNFT.InvestmentData[]",
+        name: "nftsDetail",
+        type: "tuple[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
         name: "to",
         type: "address",
       },
@@ -648,7 +739,7 @@ export default [
         type: "uint256[]",
       },
     ],
-    name: "batchGetInvestmentData",
+    name: "batchGetTokensDetail",
     outputs: [
       {
         components: [
@@ -853,6 +944,30 @@ export default [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "walletAddress",
+        type: "address",
+      },
+    ],
+    name: "getDividendEarning",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "dividendEarned",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "dividendPending",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "uint256",
         name: "tokenId",
         type: "uint256",
@@ -939,6 +1054,64 @@ export default [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "walletAddress",
+        type: "address",
+      },
+    ],
+    name: "getInvestorRounds",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "roundIds",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "investor",
+        type: "address",
+      },
+    ],
+    name: "getInvestorSummary",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "totalTokensOwned",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256[]",
+        name: "nftTokenIds",
+        type: "uint256[]",
+      },
+      {
+        internalType: "uint256",
+        name: "totalInvestment",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "dividendsEarned",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256[]",
+        name: "activeRounds",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "bytes32",
         name: "role",
         type: "bytes32",
@@ -950,6 +1123,92 @@ export default [
         internalType: "bytes32",
         name: "",
         type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "tokenId",
+        type: "uint256",
+      },
+    ],
+    name: "getTokenDetail",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "tokenId",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "roundId",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "tokenPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "rewardPercentage",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalTokenOpenInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "purchaseTimestamp",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "closeDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "endDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "originalBuyer",
+            type: "address",
+          },
+          {
+            internalType: "bool",
+            name: "redeemed",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "rewardClaimed",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "transferLocked",
+            type: "bool",
+          },
+          {
+            internalType: "string",
+            name: "metadata",
+            type: "string",
+          },
+        ],
+        internalType: "struct DZNFT.InvestmentData",
+        name: "",
+        type: "tuple",
       },
     ],
     stateMutability: "view",
@@ -1163,6 +1422,97 @@ export default [
         internalType: "uint256[]",
         name: "tokenIds",
         type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "walletAddress",
+        type: "address",
+      },
+    ],
+    name: "getWalletTokensDetail",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "tokenIds",
+        type: "uint256[]",
+      },
+      {
+        components: [
+          {
+            internalType: "uint256",
+            name: "tokenId",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "roundId",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "tokenPrice",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "rewardPercentage",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "totalTokenOpenInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "purchaseTimestamp",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "closeDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "uint256",
+            name: "endDateInvestment",
+            type: "uint256",
+          },
+          {
+            internalType: "address",
+            name: "originalBuyer",
+            type: "address",
+          },
+          {
+            internalType: "bool",
+            name: "redeemed",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "rewardClaimed",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "transferLocked",
+            type: "bool",
+          },
+          {
+            internalType: "string",
+            name: "metadata",
+            type: "string",
+          },
+        ],
+        internalType: "struct DZNFT.InvestmentData[]",
+        name: "nftsDetail",
+        type: "tuple[]",
       },
     ],
     stateMutability: "view",

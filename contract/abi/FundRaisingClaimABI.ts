@@ -233,6 +233,29 @@ export default [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "roundId",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "increase",
+        type: "bool",
+      },
+    ],
+    name: "updateRoundLedger",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "usdtToken",
     outputs: [

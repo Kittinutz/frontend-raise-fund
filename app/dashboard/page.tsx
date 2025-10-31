@@ -53,6 +53,7 @@ import {
 } from "@/types/fundingContract";
 import { formatEther } from "viem";
 import dayjs from "dayjs";
+import { getStatusClaimable } from "@/lib/roundCalculation";
 
 export default function InvestorDashboard() {
   const { isConnected } = useWallet();
@@ -64,22 +65,21 @@ export default function InvestorDashboard() {
   const {
     investorDashboard,
     investorRounds,
-    investorNftIds,
     investorNftDetail,
+    currentBlocktime,
+    handleClaimReward,
   } = useFundingContract();
 
   const now = useMemo(() => {
-    return dayjs();
-  }, []);
-
+    return dayjs(
+      currentBlocktime ? Number(currentBlocktime) * 1000 : Date.now()
+    );
+  }, [currentBlocktime]);
+  console.log("now", now);
   // Check if investment is claimable (6 months after round creation)
   const isClaimable = useCallback(
     (round: InvestmentRound) => {
-      const roundCloseDateInvestment = dayjs(
-        Number(round.closeDateInvestment) * 1000
-      );
-      const sixMonthsLater = roundCloseDateInvestment.add(180, "day");
-      return now.isAfter(sixMonthsLater);
+      return getStatusClaimable(round, now);
     },
     [now]
   );
@@ -119,10 +119,10 @@ export default function InvestorDashboard() {
   const selectedInvestmentAmount = useMemo(() => {
     if (selectedInvestment === null) return "0";
     return (
-      (investorNftIds[Number(selectedInvestment.roundId)]?.length ?? 0) *
+      (investorNftDetail[Number(selectedInvestment.roundId)]?.length ?? 0) *
       Number(formatEther(selectedInvestment.tokenPrice))
     ).toLocaleString();
-  }, [selectedInvestment, investorNftIds]);
+  }, [selectedInvestment, investorNftDetail]);
 
   const getInvestorNftDetail = useCallback(
     (round: InvestmentRound | null): InvestmentRoundNFT[] => {
@@ -330,7 +330,14 @@ export default function InvestorDashboard() {
                               if (!round) return null;
 
                               const canClaim = isClaimable(round);
-                              const nfts = investorNftIds[index];
+                              console.log(
+                                "investorNftDetail",
+                                investorNftDetail
+                              );
+                              const nfts =
+                                investorNftDetail[round.roundId.toString()] ||
+                                [];
+
                               const numberOfNft = nfts.length;
                               return (
                                 <TableRow
@@ -621,7 +628,7 @@ export default function InvestorDashboard() {
             </Button>
             {selectedInvestment && isClaimable(selectedInvestment) && (
               <Button
-                // onClick={() => handleClaimReward(selectedInvestment.roundId)}
+                onClick={() => handleClaimReward(selectedInvestment.roundId)}
                 className="bg-accent hover:bg-accent/90"
               >
                 <CheckCircle2 className="mr-2 h-4 w-4" />

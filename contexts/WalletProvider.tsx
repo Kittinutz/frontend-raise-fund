@@ -186,6 +186,7 @@ export function WalletProvider({ children }: WalletProviderProps) {
     async function fetchOwner() {
       if (!currentAddress) return;
       const ownerFundingContract = await fetchFundingContractOwner();
+      console.log("---->", ownerFundingContract);
       setFundingOwnerAddress(ownerFundingContract?.toLowerCase() as string);
     }
     fetchOwner();
@@ -239,8 +240,13 @@ export function WalletProvider({ children }: WalletProviderProps) {
     }
   }, [currentAddress, walletClient, initializeWalletClient]);
   const isOwnerFundingContract = useMemo(() => {
-    return fundingOwnerAddress?.toLowerCase() === currentAddress?.toLowerCase();
+    if (currentAddress)
+      return (
+        fundingOwnerAddress?.toLowerCase() === currentAddress?.toLowerCase()
+      );
+    else return false;
   }, [currentAddress, fundingOwnerAddress]);
+
   const value: WalletContextType = {
     walletClient,
     currentAddress,

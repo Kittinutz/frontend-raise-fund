@@ -53,9 +53,17 @@ export interface InvestmentRound {
 }
 
 export interface InvestorDashboard {
-  totalTokensOwned: number;
+  totalTokensOwned: bigint[];
   nftTokenIds: bigint[];
   totalInvestedAmount: bigint;
   totalDividendEarned: bigint;
   activeRounds: bigint[];
+}
+
+export interface InvestorInvestmentDetail {
+  roundIds: bigint[];
+  roundDetail: InvestmentRound[];
+  nfts: InvestmentRoundNFT[];
+  nftDetail: Record<string, InvestmentRoundNFT[]>;
+  isEnableClaimReward?: boolean[];
 }
